@@ -9,7 +9,7 @@ npm test
 python3 scripts/check_release.py
 ```
 
-The public test driver uses built-in Node/Python facilities. It needs no model files, download, GPU or browser. Its eleven groups cover authored campaign rules, saves/fallbacks, optical routing, record matching, mocked audio lifecycle and codec fallback, request/proposal boundaries, the stdlib host, model-file setup, resource-guard failures and the native probe’s owned-child cleanup using a toy worker. The optional MLX CPU-math tests are deliberately outside this dependency-free command; it does not count unrun native tests as passed. Generated results go to the ignored `.test-results/` directory. The release checker separately checks public package links, assets, file scope and privacy.
+The public test driver uses built-in Node/Python facilities. It needs no model files, download, GPU or browser. Its twelve groups cover authored campaign rules, saves/fallbacks, optical routing, neural source replay, record matching, mocked audio lifecycle and codec fallback, request/proposal boundaries, the stdlib host, model-file setup, resource-guard failures and the native probe’s owned-child cleanup using a toy worker. The optional MLX CPU-math tests are deliberately outside this dependency-free command; it does not count unrun native tests as passed. Generated results go to the ignored `.test-results/` directory. The release checker separately checks public package links, assets, file scope and privacy.
 
 These checks do not prove that the 3D interface is readable, that native inference worked, or that an hour of play is engaging. State what you actually tested in a change report.
 
@@ -18,6 +18,12 @@ These checks do not prove that the 3D interface is readable, that native inferen
 Start `python3 -B server.py`. In a fresh save slot, check title readiness, Begin, movement, orbit/zoom, interaction prompt, pause/resume and Continue. Use an isolated slot for tests that start a new crossing. Check narrow and desktop guide layouts, keyboard navigation, every FAQ answer and the PDF link.
 
 For world/UI changes, retain unmodified screenshots at the actual viewport. Check instrument readability and near/behind visibility, then exercise the relevant ordinary-control route. Fixtures are useful for a bounded state, but are not a complete campaign playthrough.
+
+## Neural source replay checks
+
+Use an isolated save slot and record the revision, browser and fixture or campaign entry route. Check Before/After on both the world voice table and console: retain the same optics and mixture weights, show only the selected record’s dry trace, and verify that secondary bands can change whether a receiver passes while the leading action stays fixed. Receiver lightwells must compare current received power with fixed minimum/maximum collars; the readiness gate must follow every receiver, contact and routing requirement. Source switching and repeated dry probes must leave heat, strain, scars, captures, rotors and allocations unchanged. Commit is a separate action.
+
+Check AUTHORED browser pairs, actual retained local pairs, mixed inputs and legacy records with no before measurement; never synthesize a missing measurement or describe replay as a fresh capture. Verify source selection survives Continue, stale work-order previews are invalidated, and committed phase/history vectors and provenance survive later retuning or replacement. CPU fixtures with native-shaped records test plumbing, not inference. A constructed Chapter 4 cold fixture verifies a bounded interface state; it does not qualify live inference or ordinary campaign progression.
 
 ## Audio checks
 

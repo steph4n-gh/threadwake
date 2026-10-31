@@ -54,6 +54,7 @@ const timer = new THREE.Clock();
 const keys = new Set();
 const revealedHints = new Set();
 const revealedChamberHints = new Set();
+const openEchoRecords = new Set();
 const velocity = new THREE.Vector2();
 let run = Campaign.start(), projection = Campaign.view(run), mode = 'title', panel = null, paused = false;
 let saved = null, started = false, activePerson = 'iona', activeMachine = null, activeAttune = null;
@@ -234,7 +235,7 @@ function updateSoundscape(force = false) {
   const machine = panel === 'workbench' ? machinePanel() : worldTableAvailable() ? worldTableMachine() : null;
   const signalFixture = FIXTURES.find(f => f.kind === 'attune' && (panel === 'attune' && f.id === activeAttune || Math.hypot(run.pos.x - f.x, run.pos.z - f.z) < 6));
   const signal = run.spectra[signalFixture?.signal];
-  const signalBands = panel === 'composer' ? Object.fromEntries(ACTIONS.map((action, i) => [action, run.mixture[i]])) : machine?.chamber ? run.toolMixture : signal?.probabilities_after || signal?.authored_spectrum || { BRIDGE: 0, SHELTER: 0, SURGE: 0 };
+  const signalBands = panel === 'composer' ? Object.fromEntries(ACTIONS.map((action, i) => [action, run.mixture[i]])) : machine?.chamber ? machine.chamber.report.source : signal?.probabilities_after || signal?.authored_spectrum || { BRIDGE: 0, SHELTER: 0, SURGE: 0 };
   soundscape.update({ signalBands, position: { ...run.pos }, yaw: Math.atan2(-direction.x, -direction.y), zone: zone?.id || 'threads', wind, strain: run.strain, health: run.health, speed: mode === 'playing' && !panel && !paused && falling === 0 ? velocity.length() : 0, pending: !!run.pending, paused: paused || mode === 'title', hidden: document.hidden, completed: run.phase === 'victory' ? 1 : run.mission / MISSIONS.length, emitters: emitters.slice(0, 8) });
 }
 function playCampaignAudio(before, outcome) {
@@ -258,7 +259,7 @@ function playCampaignAudio(before, outcome) {
     else if (event.type === 'chamber-probe' || event.type === 'chamber-commit') soundCue(event.type, { ...details, pass: event.pass, complete: event.complete, vector: event.mixture || run.toolMixture });
     else if (event.type === 'return-line-operation') { const op = event.operation; soundCue(op.op === 'set' ? 'control' : op.trigger === 'return_line_fit' ? 'installed' : 'trigger', { ...detailsFor({ console: 'gallery_return_console' }), id: op.handle || op.trigger }); }
     else if (event.type === 'return-line-commissioned' || event.type === 'return-line-parked') soundCue('return-flow', { ...detailsFor({ console: 'gallery_return_console' }), active: true });
-    else if (['tool-mix', 'mix', 'reference-tool'].includes(event.type)) soundCue('signal', { ...details, vector: event.type === 'mix' ? Object.fromEntries(ACTIONS.map((action, i) => [action, run.mixture[i]])) : run.toolMixture, action: event.action });
+    else if (['tool-mix', 'mix', 'reference-tool', 'tool-source'].includes(event.type)) soundCue('signal', { ...details, vector: event.type === 'mix' ? Object.fromEntries(ACTIONS.map((action, i) => [action, run.mixture[i]])) : run.toolMixture, action: event.action });
     else if (event.type === 'recovered') soundCue('recover', details);
   }
 }
@@ -490,7 +491,8 @@ function composerSourceDetails(source) {
     const origin = component.provenance === 'local' ? 'LOCAL CAPTURE' : component.provenance === 'authored' ? 'AUTHORED CALIBRATION' : 'ORIGIN UNRECORDED';
     const weight = Number.isFinite(component.weight) ? `≈${(100 * component.weight).toFixed(1)}% of this source` : 'share unrecorded';
     const detail = component.provenance === 'local' ? `Capture record: ${component.recordId || 'unrecorded'}. Model revision: ${component.modelRevision || 'not retained in this record'}.` : component.provenance === 'authored' ? 'Authored calibration, not a model measurement.' : 'The source vector is retained; its component origin was not recorded.';
-    return { text: `${component.action} · ${weight} · ${origin}`, detail };
+    const side = component.sourceMode ? ` · ${component.sourceMode.toUpperCase()} RECORD` : '';
+    return { text: `${component.action} · ${weight} · ${origin}${side}`, detail };
   });
   return { provenance, spectrum: approximateSpectrum(source.vector), components };
 }
@@ -800,6 +802,56 @@ function renderWorldTrace(chamber, dt) {
   world.voiceTable.setTraceCursor(worldTrace.index, worldTrace.elapsed / WORLD_TRACE_LEG_SECONDS);
 }
 
+function chamberFailureReading(report) {
+  const failed = report.sinks.find(sink => !sink.pass);
+  if (!failed) return report.goals.find(goal => !goal.pass)?.text || report.diagnosis;
+  const name = failed.band[0] + failed.band.slice(1).toLowerCase();
+  const reason = failed.received < failed.min - 1e-9 || failed.received > failed.max + 1e-9
+    ? `${(failed.received * 100).toFixed(1)}% · window ${(failed.min * 100).toFixed(0)}–${(failed.max * 100).toFixed(0)}%`
+    : failed.wrong > .025 + 1e-9 ? `cross-feed ${(failed.wrong * 100).toFixed(1)}% · limit 2.5%`
+      : 'required readheads or relay contacts not reached';
+  return `${name} receiver: ${reason}`;
+}
+
+function appendSourceReplay(parent, chamber, fixture) {
+  if (chamber.complete) return;
+  const make = (tag, text, className = '') => { const node = document.createElement(tag); node.textContent = text; node.className = className; return node; };
+  const replay = make('section', '', 'source-replay'); replay.setAttribute('aria-label', 'Neural echo source replay');
+  const active = chamber.profiles.filter((profile, index) => profile.available && chamber.weights[index] > 0);
+  const local = active.filter(profile => profile.provenance === 'local').length;
+  const origin = !active.length ? 'NO POWERED RECORD' : local === active.length ? 'MEASURED PAIR' : local ? 'MIXED RECORDS' : 'AUTHORED CALIBRATION · NO MODEL EDIT';
+  replay.append(make('p', 'NEURAL ECHO', 'echo-title'), make('small', origin, 'echo-origin'));
+  const controls = make('div', '', 'echo-switch'); controls.setAttribute('role', 'group'); controls.setAttribute('aria-label', 'Route the before or after record');
+  for (const mode of ['before', 'after']) {
+    const button = make('button', mode === 'before' ? 'Before' : 'After'); button.type = 'button'; button.dataset.mode = mode;
+    button.classList.toggle('selected', chamber.sourceMode === mode); button.setAttribute('aria-pressed', String(chamber.sourceMode === mode));
+    button.disabled = !!run.program || !chamber.report.powered;
+    button.onclick = () => {
+      if (chamber.sourceMode === mode) return;
+      act({ kind: 'toolSource', fixture, mode });
+      if (worldTableSession) renderWorldTable();
+      parent.querySelector(`.source-replay button[data-mode="${mode}"]`)?.focus({ preventScroll: true });
+    };
+    controls.append(button);
+  }
+  replay.append(controls);
+  const observed = chamber.report;
+  replay.append(make('p', `${chamber.sourceMode.toUpperCase()} ROUTED · ${observed.pass ? '✓ dry trace ready' : '○ dry trace incomplete'}`, 'echo-outcome'));
+  if (!observed.pass) replay.append(make('p', chamberFailureReading(observed), 'echo-reading'));
+  replay.append(make('p', 'Same optics. Same weights. Replaying a record makes no new capture.', 'echo-note'));
+  const records = make('details', '', 'echo-records'); records.open = openEchoRecords.has(fixture);
+  records.ontoggle = () => { if (!records.isConnected) return; if (records.open) openEchoRecords.add(fixture); else openEchoRecords.delete(fixture); };
+  records.append(make('summary', 'Inspect the recorded pair'));
+  for (const profile of active) {
+    const text = profile.paired ? `${profile.action} record · before ${approximateSpectrum(profile.before)} · after ${approximateSpectrum(profile.after)}` : `${profile.action} · no before record; this retained calibration is held fixed.`;
+    records.append(make('p', text));
+    if (profile.provenance === 'local') records.append(make('p', profile.steeringApplied ? 'The capture records an applied activation edit.' : 'This capture records no applied activation edit.'));
+  }
+  replay.append(records);
+  if (chamber.site === 'voice' && chamber.index === 1) replay.append(make('blockquote', '“A name may stay the same while its witnesses vanish.” — Mara', 'echo-inscription'));
+  parent.append(replay);
+}
+
 function renderWorldTable(dt = 0) {
   const show = worldTableAvailable(); visible('worldTableHud', show); visible('worldTableLabels', show);
   if (show) {
@@ -815,11 +867,12 @@ function renderWorldTable(dt = 0) {
     $('worldTableHud').querySelector('.instrument-inspection summary').textContent = chamber.complete ? 'Route inspection · sealed, read only' : 'Route inspection · click a cell to turn';
     renderWorldCellSelection(chamber);
     $('worldTableBands').replaceChildren(); for (const band of [null, ...ACTIONS]) { const button = make('button', band ? band[0] + band.slice(1).toLowerCase() : 'Show all'); button.classList.toggle('selected', band === worldTableBand); button.setAttribute('aria-pressed', String(band === worldTableBand)); button.title = band ? 'Inspect this current trace; select the band again to replay.' : 'Show all routes and stop ordered playback.'; button.onclick = () => { worldTableBand = band; worldTrace.key = null; world.voiceTable.setBandFocus(band); worldTableUiKey = ''; renderWorldTable(); }; $('worldTableBands').append(button); }
-    $('worldTableSource').textContent = `${chamber.complete ? 'SEALED' : 'CURRENT SOURCE'} · ${approximateSpectrum(chamber.report.source)} · State totals: Heat ${run.heat} · Strain ${Math.round(run.strain)} · Scars ${run.scars}`;
+    $('worldTableSource').textContent = `${chamber.complete ? 'SEALED OUTPUT' : 'ROUTED INPUT · ' + chamber.sourceMode.toUpperCase()} · ${approximateSpectrum(chamber.report.source)} · State totals: Heat ${run.heat} · Strain ${Math.round(run.strain)} · Scars ${run.scars}`;
     $('worldTableInputs').replaceChildren();
     if (chamber.complete) { const source = projection.finale?.sources?.find(source => source.signal === 'voice' && source.kind === 'sealed_chamber_mix'), info = source && source.provenanceKnown !== false ? composerSourceDetails(source) : { provenance: 'LEGACY SEAL · INPUT HISTORY UNRECORDED', components: [] }; $('worldTableInputs').append(make('p', info.provenance)); for (const component of info.components) $('worldTableInputs').append(make('p', component.text)); }
     else {
-      $('worldTableInputs').append(make('p', 'Weights blend fixed spectra; they do not rewrite a capture.', 'world-table-input-note'));
+      appendSourceReplay($('worldTableInputs'), chamber, 'choir_voice_signal');
+      $('worldTableInputs').append(make('p', 'Weights blend the selected records; they do not rewrite a capture.', 'world-table-input-note'));
       ACTIONS.forEach((action, index) => {
         const profile = chamber.profiles.find(profile => profile.action === action), row = make('label', '', 'world-table-input');
         const title = make('span', `${action[0] + action.slice(1).toLowerCase()} tool · ${profile?.available ? profile.provenance === 'local' ? 'LOCAL' : profile.provenance === 'authored' ? 'AUTHORED' : 'LEGACY' : 'MISSING'}`);
@@ -829,7 +882,12 @@ function renderWorldTable(dt = 0) {
         if (profile?.available) for (const band of ACTIONS) { const segment = make('i', '', band.toLowerCase()); segment.style.flexGrow = String(profile.probabilities[band]); strip.append(segment); }
         const slider = document.createElement('input'); slider.type = 'range'; slider.min = '0'; slider.max = '100'; slider.value = chamber.weights[index]; slider.disabled = !profile?.available || !worldTableEditable(); slider.setAttribute('aria-label', action + ' input weight, 0 to 100');
         slider.oninput = () => amount.textContent = 'WEIGHT ' + slider.value;
-        slider.onchange = () => { if (!worldTableEditable()) return; const weights = [...worldTableMachine().chamber.weights]; weights[index] = Number(slider.value); act({ kind: 'toolMix', fixture: 'choir_voice_signal', weights }); };
+        slider.onchange = () => {
+          if (!worldTableEditable()) return;
+          const focused = document.activeElement === slider, weights = [...worldTableMachine().chamber.weights]; weights[index] = Number(slider.value);
+          act({ kind: 'toolMix', fixture: 'choir_voice_signal', weights }); renderWorldTable();
+          if (focused) $('worldTableInputs').querySelector(`input[aria-label="${action} input weight, 0 to 100"]`)?.focus({ preventScroll: true });
+        };
         row.append(title, amount, spectrum, strip, slider); $('worldTableInputs').append(row);
       });
     }
@@ -843,7 +901,7 @@ function renderWorldTable(dt = 0) {
     }
     $('worldTableHud').dataset.state = chamber.complete ? 'sealed' : chamber.report.dangerous ? 'dangerous' : chamber.report.pass ? 'ready' : 'incomplete';
     const goals = chamber.report.goals; $('worldTableGoalsTitle').textContent = `${goals.filter(goal => !goal.pass).length} remaining · all routing requirements`; $('worldTableGoals').replaceChildren(); for (const goal of goals) { const receiver = chamber.report.sinks.find(sink => 'receiver_' + sink.band === goal.id), text = receiver?.minimumCells > 0 ? goal.text.replace('five relay contacts', 'at least ' + receiver.minimumCells + ' distinct relays') : goal.text; $('worldTableGoals').append(make('p', (goal.pass ? '✓ ' : '○ ') + text)); }
-    const tripped = run.chambers.voice.faulted.includes(chamber.stage); $('worldTableRisk').textContent = chamber.complete ? 'SEALED · recorded source and route; current global bank cannot change it.' : chamber.report.dangerous ? tripped ? 'DRY TRACE · reserve fuse already tripped; no new scar on repeat.' : 'DRY TRACE · Commit overloads the reserve: 4 strain and one permanent scar.' : chamber.report.pass ? 'DRY TRACE READY · all requirements pass. Commit is a separate action.' : `DRY TRACE · ${chamber.report.goals.find(goal => goal.id === 'leakage').pass ? 'Leak within' : 'Leak exceeds'} 2.5% limit (${(chamber.report.leakTotal * 100).toFixed(2)}%). Commit will not advance; no strain or scar.`;
+    const tripped = run.chambers.voice.faulted.includes(chamber.stage); $('worldTableRisk').textContent = chamber.complete ? 'SEALED · recorded source and route; current global bank cannot change it.' : chamber.report.dangerous ? tripped ? 'DRY TRACE · reserve fuse already tripped; no new scar on repeat.' : 'DRY TRACE · Commit overloads the reserve: 4 strain and one permanent scar.' : chamber.report.pass ? 'DRY TRACE READY · all requirements pass. Commit is a separate action.' : `DRY TRACE · ${chamberFailureReading(chamber.report)}. Commit will not advance; no strain or scar.`;
     $('worldTableHud').querySelector('.world-table-help').textContent = chamber.complete ? 'Sealed route · hover to inspect · drag orbit · Esc leaves.' : 'Hover to inspect · click to turn · drag orbit · Esc leaves.';
     $('worldTableCommit').disabled = !worldTableEditable() || !chamber.report.powered; $('worldTableCommit').textContent = chamber.complete ? 'Route sealed' : chamber.report.dangerous ? tripped ? 'Retest tripped reserve' : 'Commit overload · +4 strain, 1 scar' : chamber.report.pass ? 'Commit phase' : 'Safe test · incomplete'; $('worldTableFrame').textContent = worldTableSession.restore ? 'Restore orbit' : 'Frame bench';
   }
@@ -878,7 +936,7 @@ function renderChamber(machine) {
   const scars = run.chambers[chamber.site]?.faulted?.length || 0;
   if (scars) $('chamberRule').textContent += ` The chamber retains ${scars} historical fracture${scars === 1 ? '' : 's'} from overloaded reserves.`;
   const risk = $('chamberRisk'), tripped = run.chambers[chamber.site].faulted.includes(chamber.stage);
-  risk.textContent = chamber.complete ? 'Sealed. The recorded source and all three phase results are kept in the ledger.' : chamber.report.dangerous ? tripped ? 'The reserve fuse already tripped. Another failed commit adds no damage; the historical scar remains.' : 'Committing trips the reserve fuse: up to 4 strain and one permanent scar. Dry tracing is safe.' : chamber.report.pass ? 'Every receiver and relay contact agrees. This phase is ready to commit.' : 'The routing is not ready. A failed commit of this dry trace will not damage the reserve.';
+  risk.textContent = chamber.complete ? 'Sealed. The recorded source and all three phase results are kept in the ledger.' : chamber.report.dangerous ? tripped ? 'The reserve fuse already tripped. Another failed commit adds no damage; the historical scar remains.' : 'Committing trips the reserve fuse: up to 4 strain and one permanent scar. Dry tracing is safe.' : chamber.report.pass ? 'Every receiver and relay contact agrees. This phase is ready to commit.' : chamberFailureReading(chamber.report) + '. A failed commit will not damage the reserve.';
   risk.classList.toggle('danger-risk', !!chamber.report.dangerous);
   const stageKey = chamber.site + ':' + chamber.index;
   if (lastChamberStage !== stageKey) { $('workbench').querySelector('.panel').scrollTop = 0; $('workOrderForm').open = false; $('planInput').value = ''; $('rotorControls').open = false; lastChamberStage = stageKey; }
@@ -906,6 +964,7 @@ function renderChamber(machine) {
     } else { const unknown = document.createElement('p'); unknown.className = 'hint'; unknown.textContent = 'The final source vector is retained, but the original input profiles and allocations were not recorded.'; details.append(unknown); }
     tools.append(details); return;
   }
+  appendSourceReplay(tools, chamber, activeMachine);
   const recovery = document.createElement('details'), recoveryTitle = document.createElement('summary'); recovery.className = 'interlock-hint'; recovery.open = browserEdition; recoveryTitle.textContent = browserEdition ? 'Authored calibration tools / optional solution' : 'Recovery tools · authored calibration / optional solution'; recovery.append(recoveryTitle);
   const recoveryNote = document.createElement('p'); recoveryNote.className = 'hint'; recoveryNote.textContent = browserEdition ? 'These authored calibration spectra supply the browser edition’s routing puzzles. Their secondary bands affect the result. No neural measurement is made.' : 'For an unavailable local model, these authored calibration profiles preserve sideband interference. They are not measured neural signals. Replacing a captured profile cannot be undone.'; recovery.append(recoveryNote);
   ACTIONS.forEach((action, index) => {
@@ -916,7 +975,11 @@ function renderChamber(machine) {
     amount.textContent = String(chamber.weights?.[index] ?? run.toolWeights[index]); head.append(label, amount);
     const slider = document.createElement('input'); slider.type = 'range'; slider.min = '0'; slider.max = '100'; slider.value = chamber.weights?.[index] ?? run.toolWeights[index]; slider.disabled = !profile?.available || !!run.program || chamber.complete; slider.setAttribute('aria-label', action + ' input allocation');
     slider.oninput = () => { amount.textContent = slider.value; touch(); };
-    slider.onchange = () => { const weights = [...run.toolWeights]; weights[index] = Number(slider.value); act({ kind: 'toolMix', fixture: activeMachine, weights }); };
+    slider.onchange = () => {
+      const focused = document.activeElement === slider, weights = [...run.toolWeights]; weights[index] = Number(slider.value);
+      act({ kind: 'toolMix', fixture: activeMachine, weights });
+      if (focused) $('chamberTools').querySelector(`input[aria-label="${action} input allocation"]`)?.focus({ preventScroll: true });
+    };
     const reference = document.createElement('button'); reference.className = 'secondary'; reference.textContent = (profile?.available ? 'Replace with' : 'Add') + ' authored ' + action.toLowerCase() + ' calibration'; reference.disabled = !!run.program || chamber.complete;
     reference.onclick = () => act({ kind: 'referenceTool', fixture: activeMachine, action });
     const spectrum = document.createElement('p'); spectrum.className = 'profile-spectrum'; spectrum.textContent = profile?.available ? approximateSpectrum(profile.probabilities) : 'No retained profile.';

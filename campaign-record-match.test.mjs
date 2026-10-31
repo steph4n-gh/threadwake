@@ -105,6 +105,7 @@ test('New recovery tool and attunement profiles are realistic while legacy pure 
   state = perform(pending.state, { kind: 'attuned', fixture: f.id, ticket: pending.packet.ticket, result: { action: 'SHELTER', provenance: 'authored' } });
   assert.equal(state.heat, before.heat);
   const legacy = snapshot(state);
+  delete legacy.toolBank.BRIDGE.authored_spectrum_before;
   legacy.toolBank.BRIDGE.authored_spectrum = { BRIDGE: 1, SHELTER: 0, SURGE: 0 };
   assert.equal(start(legacy).restoreWarning, undefined);
   legacy.toolBank.BRIDGE.authored_spectrum = { BRIDGE: .8, SHELTER: .1, SURGE: .1 };

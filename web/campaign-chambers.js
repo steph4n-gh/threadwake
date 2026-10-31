@@ -168,6 +168,7 @@ export function recoverySpectrum(action) {
   if (!ACTIONS.includes(action)) throw new TypeError('Choose Bridge, Shelter or Surge for the authored recovery profile.');
   return { ...RECOVERY[action] };
 }
+export function recoverySpectrumBefore(action) { return action === 'BRIDGE' ? { BRIDGE: .83, SHELTER: .02, SURGE: .15 } : recoverySpectrum(action); }
 
 
 function siteFor(id) { const site = CATALOG[id]; if (!site) throw new TypeError('Unknown neural chamber.'); return site; }

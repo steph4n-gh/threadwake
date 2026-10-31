@@ -91,6 +91,36 @@ export function createChamberRig({ nameplates = false } = {}) {
   const warning = material({ color: 0xf3a28d, emissive: 0xd46d66, emissiveIntensity: 1, roughness: .7 });
   const portMaterials = Object.fromEntries(BANDS.map(band => [band, unlit({ color: COLORS[band] })]));
   const sourceMaterial = material({ color: 0xe3ead1, emissive: 0xc6dec6, emissiveIntensity: .8, roughness: .35 });
+  const wellTube = geometry(new THREE.CylinderGeometry(.155, .155, 1, 16, 1, true));
+  const wellColumn = geometry(new THREE.CylinderGeometry(.105, .105, 1, 16));
+  const wellCollar = geometry(new THREE.TorusGeometry(.19, .018, 6, 24));
+  const wellTick = geometry(new THREE.BoxGeometry(.018, .025, .09));
+  const wellGlass = unlit({ color: 0x97c7c0, transparent: true, opacity: .075, depthWrite: false });
+  const wellBottom = .12, wellHeight = .85, receivers = [];
+  for (let index = 0; index < BANDS.length; index++) {
+    const band = BANDS[index], well = new THREE.Group(); well.name = 'chamber_receiver_' + band; well.visible = false;
+    const base = new THREE.Mesh(baseShape, dark); base.position.y = .025; base.scale.set(.44, .83, .44); well.add(base);
+    const tube = new THREE.Mesh(wellTube, wellGlass); tube.position.y = wellBottom + wellHeight / 2; tube.scale.y = wellHeight; well.add(tube);
+    const lower = new THREE.Mesh(wellCollar, bronze), upper = new THREE.Mesh(wellCollar, bronze);
+    lower.rotation.x = upper.rotation.x = Math.PI / 2; well.add(lower, upper);
+    const foot = new THREE.Mesh(wellCollar, bronze); foot.rotation.x = Math.PI / 2; foot.position.y = wellBottom; foot.scale.setScalar(1.18); well.add(foot);
+    const cap = new THREE.Mesh(wellCollar, bronze); cap.rotation.x = Math.PI / 2; cap.position.y = wellBottom + wellHeight; cap.scale.setScalar(1.18); well.add(cap);
+    const columnMaterial = unlit({ color: COLORS[band], transparent: true, opacity: .42, depthWrite: false, blending: THREE.AdditiveBlending });
+    const column = new THREE.Mesh(wellColumn, columnMaterial), head = new THREE.Mesh(wellColumn, portMaterials[band]); head.scale.set(1.38, .028, 1.38);
+    column.name = 'chamber_flux_column_' + band; head.name = 'chamber_flux_readhead_' + band; well.add(column, head);
+    const marks = new THREE.InstancedMesh(wellTick, bronze, 6 + index), markPose = new THREE.Object3D();
+    for (let tick = 0; tick < 5; tick++) { markPose.position.set(.21, wellBottom + tick * wellHeight / 4, 0); markPose.updateMatrix(); marks.setMatrixAt(tick, markPose.matrix); }
+    // One, two, three notches keep the band keys distinguishable without colour.
+    for (let mark = 0; mark <= index; mark++) { markPose.position.set((mark - index / 2) * .065, .087, .205); markPose.updateMatrix(); marks.setMatrixAt(5 + mark, markPose.matrix); }
+    marks.instanceMatrix.needsUpdate = true; well.add(marks);
+    receivers.push({ band, well, column, head, lower, upper, value: 0, target: 0, scale: 1 }); group.add(well);
+  }
+  const readiness = new THREE.Group(); readiness.name = 'chamber_readiness_lock'; readiness.position.set(0, .12, 2.67); group.add(readiness);
+  const lockBed = new THREE.Mesh(roundShape, dark); lockBed.scale.set(1.15, .22, 1); readiness.add(lockBed);
+  const lockLeaves = [];
+  for (const sign of [-1, 1]) { const leaf = new THREE.Mesh(roundShape, bronze); leaf.scale.set(.48, .15, 1.25); leaf.position.x = sign * .165; readiness.add(leaf); lockLeaves.push(leaf); }
+  const lockSeal = new THREE.Mesh(mirrorFace, sourceMaterial); lockSeal.scale.set(.85, .16, 1); lockSeal.position.z = -.056; readiness.add(lockSeal);
+  let ready = 0, readyTarget = 0;
   group.add(portGroup, markerGroup);
   const up = new THREE.Vector3(0, 1, 0);
   let focusedBand = null;
@@ -111,6 +141,21 @@ export function createChamberRig({ nameplates = false } = {}) {
     if (fragile) for (const sign of [-1, 1]) { const cross = new THREE.Mesh(warningShape, warning); cross.rotation.y = sign * Math.PI / 4; cross.position.copy(at).add(new THREE.Vector3(0, .07, 0)); portGroup.add(cross); }
   }
   function update(view) {
+    readyTarget = view.report?.pass === true ? 1 : 0;
+    readiness.userData.ready = readyTarget === 1;
+    for (const receiver of receivers) {
+      const sink = view.report?.sinks?.find(item => item.band === receiver.band);
+      receiver.well.visible = !!sink?.port;
+      if (!sink?.port) { receiver.target = 0; continue; }
+      receiver.well.position.copy(point(sink.port, 0));
+      // The scale is fixed by the authored limit, never by the current source.
+      receiver.scale = Math.max(.2, Math.min(1, sink.max * 1.2));
+      receiver.target = Math.max(0, Math.min(1, sink.received / receiver.scale));
+      receiver.lower.position.y = wellBottom + Math.min(1, sink.min / receiver.scale) * wellHeight;
+      receiver.upper.position.y = wellBottom + Math.min(1, sink.max / receiver.scale) * wellHeight;
+      receiver.well.userData.received = sink.received; receiver.well.userData.min = sink.min; receiver.well.userData.max = sink.max;
+      receiver.well.userData.fullScale = receiver.scale; receiver.well.userData.bandGlyph = bandGlyph(receiver.band);
+    }
     for (const cell of view.cells || []) {
       const part = rotors[cell.index]; if (!part) continue;
       part.target = -cell.orientation * Math.PI / 2; part.prism.visible = cell.kind === 'prism'; part.round.visible = cell.kind !== 'prism';
@@ -145,8 +190,18 @@ export function createChamberRig({ nameplates = false } = {}) {
       const difference = Math.atan2(Math.sin(part.target - part.rotor.rotation.y), Math.cos(part.target - part.rotor.rotation.y));
       part.rotor.rotation.y += difference * (1 - Math.exp(-dt * 13));
     }
+    const response = 1 - Math.exp(-dt * 10);
+    for (const receiver of receivers) {
+      receiver.value += (receiver.target - receiver.value) * response;
+      const height = Math.max(.003, receiver.value * wellHeight);
+      receiver.column.scale.y = height; receiver.column.position.y = wellBottom + height / 2;
+      receiver.column.visible = receiver.value > .001;
+      receiver.head.position.y = wellBottom + receiver.value * wellHeight;
+    }
+    ready += (readyTarget - ready) * response;
+    lockLeaves[0].position.x = -.165 - ready * .28; lockLeaves[1].position.x = .165 + ready * .28;
   }
-  function dispose() { geometries.forEach(value => value.dispose()); materials.forEach(value => value.dispose()); textures.forEach(value => value.dispose()); group.clear(); }
+  function dispose() { group.traverse(object => { if (object.isInstancedMesh) object.dispose(); }); geometries.forEach(value => value.dispose()); materials.forEach(value => value.dispose()); textures.forEach(value => value.dispose()); group.clear(); }
   return { group, cells: rotors.map(part => part.cell), update, animate, dispose, setBandFocus, setTraceCursor };
 }
 

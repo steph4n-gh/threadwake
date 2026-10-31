@@ -11,6 +11,7 @@ const suites = [
   ['campaign-domain', process.execPath, ['campaign.test.mjs']],
   ['optical-domain', process.execPath, ['campaign-chambers.test.mjs']],
   ['chamber-integration', process.execPath, ['campaign-chamber-integration.test.mjs']],
+  ['neural-echo', process.execPath, ['neural-echo.test.mjs']],
   ['record-matching', process.execPath, ['campaign-record-match.test.mjs']],
   ['audio-engine', process.execPath, ['audio-engine.test.mjs']],
   ['campaign-model-contract', 'python3', ['-B', 'campaign_mind_test.py']],

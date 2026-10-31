@@ -144,6 +144,8 @@ export function createCampaignWorld(scene) {
   let voiceTableKey = '';
   const voiceStand = new THREE.Group(); voiceStand.position.set(3.5, 0, -61.3); voiceStand.visible = false; root.add(voiceStand);
   for (const x of [-2.2, 2.2]) { const post = mesh(voiceStand, box, bronze, x, .75, 0); post.scale.set(.14, 1.5, .14); const foot = mesh(voiceStand, box, dark, x, .06, 0); foot.scale.set(.6, .12, .5); }
+  const voiceBrace = mesh(voiceStand, box, enamel, 0, .6, -.2); voiceBrace.name = 'voice_bench_patina_rail'; voiceBrace.scale.set(4.5, .16, .12);
+  for (const sign of [-1, 1]) rod(voiceStand, new THREE.Vector3(sign * 2.2, .18, -.2), new THREE.Vector3(sign * .9, 1.35, -.2), .055, bronze, cylinder);
   const hub = ZONES.find(z => Math.hypot(z.x, z.z) < 1) || ZONES[0];
   const pantryZone = ZONES.find(z => z.id === 'pantry');
   const districts = ZONES.filter(z => z.id !== hub.id);

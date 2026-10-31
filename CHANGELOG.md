@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-alpha.3 - 2026-10-31
+
+- Add Neural Echo source replay: route a retained capture’s before or after spectrum through the same optics and mix weights. Authored browser pairs remain visibly separate from measured local captures.
+- Add calibrated receiver lightwells, threshold collars and a full-verdict readiness lock to the optical instruments.
+- Explain optical faults separately from signal overflow, acknowledge rejected commits, and preserve keyboard slider focus and open capture records.
+- Keep selected-side input history in sealed chamber receipts and preserve older saves.
+
 ## 0.1.0-alpha.2 - 2026-10-31
 
 - Add *Lanterns on the Glass Meridian*, an original 192-second score in two synchronized music parts, with original virtual instruments and procedural world sounds.

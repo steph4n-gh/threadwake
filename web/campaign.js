@@ -41,7 +41,7 @@ function initial(newDiagnostic = true) {
     items: Object.fromEntries(FIXTURES.filter(f => f.kind === 'item').map(f => [f.item, { kind: 'world', fixture: f.id, x: f.x, z: f.z }])),
     settings: Object.fromEntries([...handleById].map(([id, h]) => [id, h.initial])),
     agreements: [], people: Object.fromEntries(PEOPLE.map(p => [p.id, { x: p.x, z: p.z, zone: p.zone, duty: p.role }])),
-    chambers: Object.fromEntries(SIGNALS.map(id => [id, Chambers.start(id)])), toolBank: {}, toolWeights: [100, 0, 0], toolMixture: { BRIDGE: 0, SHELTER: 0, SURGE: 0 },
+    chambers: Object.fromEntries(SIGNALS.map(id => [id, Chambers.start(id)])), toolBank: {}, toolSourceMode: 'after', toolWeights: [100, 0, 0], toolMixture: { BRIDGE: 0, SHELTER: 0, SURGE: 0 },
     spectra: {}, returnLine: ReturnLine.start({ fault: newDiagnostic ? ReturnLine.CASES[Math.floor(Math.random() * ReturnLine.CASES.length)] : ReturnLine.CASES[0] }),
     heat: 3, strain: 0, scars: 0, surgeSeconds: 0, epilogue: false, program: null, motions: [], pending: null, preview: null,
     conversation: [], incidents: [], receipts: [], pos, checkpoint: { ...pos }, health: 100, energy: 100, falls: 0,
@@ -85,6 +85,7 @@ export function start(saved = null) {
     const hasReturnLine = Object.hasOwn(value, 'returnLine');
     if (!hasReturnLine && (Object.keys(value.settings || {}).some(id => id.startsWith('return_line_')) || (value.agreements || []).includes('return_brace_iona') || (value.flags || []).some(id => id.startsWith('return_line_')) || (value.facts || []).some(id => id.startsWith('return_line_')))) throw new Error('Return-line records require their saved diagnostic state.');
     if (value.version !== 3 || !Number.isInteger(value.mission) || !MISSIONS[value.mission]) throw new Error('Unsupported campaign save.');
+    if (Object.hasOwn(value, 'toolSourceMode') && !['before', 'after'].includes(value.toolSourceMode)) throw new Error('Invalid saved neural source mode.');
     if (!position(value.pos) || !position(value.checkpoint)) throw new Error('Invalid saved position.');
     for (const name of ['flags', 'facts', 'agreements', 'receipts', 'incidents', 'events', 'conversation']) {
       if (!Array.isArray(value[name])) throw new Error('Incomplete campaign save.');
@@ -300,7 +301,7 @@ function simulate(run, fixture, operations) {
       if (missing(rehearsal, condition.requires).length) throw new Error('This program cannot reach ' + condition.label + '. Change the preceding steps first.');
     } else applyOperation(rehearsal, fixture, op, cues, null);
   }
-  return { changes: operationLabels(fixture, operations), flags: rehearsal.flags.filter(f => !run.flags.includes(f)), heat: rehearsal.heat - run.heat, strain: rehearsal.strain - run.strain, scars: rehearsal.scars - run.scars, chamber: fixture.chamber ? Chambers.view(rehearsal.chambers[fixture.signal], rehearsal.toolMixture) : null };
+  return { changes: operationLabels(fixture, operations), flags: rehearsal.flags.filter(f => !run.flags.includes(f)), heat: rehearsal.heat - run.heat, strain: rehearsal.strain - run.strain, scars: rehearsal.scars - run.scars, chamber: fixture.chamber ? chamberView(rehearsal, fixture) : null };
 }
 
 function operationLabels(fixture, operations) {
@@ -391,15 +392,25 @@ function validToolProfile(profile) {
   else {
     const recovery = Chambers.recoverySpectrum(profile.action);
     const legacy = ACTIONS.every(action => vector[action] === (action === profile.action ? 1 : 0));
-    if (!legacy && ACTIONS.some(action => vector[action] !== recovery[action])) return false;
+    if ((!legacy || Object.hasOwn(profile, 'authored_spectrum_before')) && ACTIONS.some(action => vector[action] !== recovery[action])) return false;
+    if (Object.hasOwn(profile, 'authored_spectrum_before')) {
+      const before = profile.authored_spectrum_before, canonical = Chambers.recoverySpectrumBefore(profile.action);
+      if (!before || Object.keys(before).sort().join(',') !== 'BRIDGE,SHELTER,SURGE' || ACTIONS.some(action => before[action] !== canonical[action])) return false;
+    }
   }
   return true;
 }
-function updateTools(run) {
+export function toolVector(profile, mode) {
+  if (!['before', 'after'].includes(mode)) throw new TypeError('Choose the before or after source.');
+  if (mode === 'after') return signalVector(profile);
+  return profile?.provenance === 'local' ? profile.probabilities_before : profile?.authored_spectrum_before || signalVector(profile);
+}
+function toolMixture(run, mode) {
   const powered = ACTIONS.map((action, index) => ({ profile: run.toolBank[action], weight: run.toolWeights[index] })).filter(row => row.profile && row.weight > 0);
   const total = powered.reduce((sum, row) => sum + row.weight, 0);
-  run.toolMixture = Object.fromEntries(ACTIONS.map(action => [action, total ? powered.reduce((sum, row) => sum + signalVector(row.profile)[action] * row.weight / total, 0) : 0]));
+  return Object.fromEntries(ACTIONS.map(action => [action, total ? powered.reduce((sum, row) => sum + toolVector(row.profile, mode)[action] * row.weight / total, 0) : 0]));
 }
+function updateTools(run) { run.toolMixture = toolMixture(run, run.toolSourceMode); }
 function rememberTool(run, profile) {
   if (!validToolProfile(profile)) throw new Error('This neural tool has no valid captured profile.');
   const first = Object.keys(run.toolBank).length === 0;
@@ -412,8 +423,14 @@ function syncChamberSettings(run, f) {
 }
 function chamberView(run, f) {
   const observed = Chambers.view(run.chambers[f.signal], run.toolMixture);
-  return { ...observed, siteID: f.signal,
-    profiles: ACTIONS.map(action => { const profile = run.toolBank[action]; return { action, available: !!profile, provenance: profile?.provenance || null, probabilities: profile ? clone(signalVector(profile)) : null, id: profile?.id || null, model_revision: profile?.model_revision || null }; }), weights: [...run.toolWeights], mixture: { ...observed.report.source } };
+  return { ...observed, siteID: f.signal, sourceMode: run.toolSourceMode,
+    profiles: ACTIONS.map(action => {
+      const profile = run.toolBank[action], paired = !!profile && (profile.provenance === 'local' || Object.hasOwn(profile, 'authored_spectrum_before'));
+      return { action, available: !!profile, provenance: profile?.provenance || null, probabilities: profile ? clone(toolVector(profile, run.toolSourceMode)) : null,
+        before: profile ? clone(toolVector(profile, 'before')) : null, after: profile ? clone(toolVector(profile, 'after')) : null, paired,
+        steeringApplied: profile?.provenance === 'local' ? profile.steering.applied : false, comparisonStatus: !profile ? 'unavailable' : !paired ? 'legacy_fixed' : profile.provenance === 'local' ? 'measured_pair' : 'authored_pair',
+        id: profile?.id || null, model_revision: profile?.model_revision || null };
+    }), weights: [...run.toolWeights], mixture: { ...observed.report.source } };
 }
 function chamberFixture(run, f) {
   const chamber = chamberView(run, f);
@@ -428,8 +445,8 @@ function chamberObservations(run, f) {
     ['rules', 'Instrument rules: a rotor turns an incoming ray by its setting: 0° straight, 90° right, 180° back, 270° left. A prism additionally turns Bridge left, Shelter straight, Surge right. Five distinct relay contacts authenticate each required band; revisiting one does not count twice. Dry tracing is safe. Committing into the fragile reserve adds 4 strain and one permanent scar once per stage.'],
     ['grid', `${chamber.stageTitle}, phase ${chamber.index + 1}/${chamber.total}. Source ${chamber.sourcePort.label}. Current row-major grid: ` + chamber.cells.map(cell => `${cellName(cell.index)} ${cell.kind} ${cell.orientation * 90}°${cell.checkpoints.length ? ' monitors ' + cell.checkpoints.join('/') : ''}`).join('; ')],
     ['goals', 'Current receivers: ' + chamber.sinks.map(sink => `${sink.band} at ${sink.port.label}: ${(sink.min * 100).toFixed(1)}–${(sink.max * 100).toFixed(1)}%, other bands ≤2.5%${sink.checkpoints.length ? ', via ' + sink.checkpoints.map(cellName).join('/') : ''}${sink.minimumCells ? ', ≥' + sink.minimumCells + ' distinct cells (' + sink.contacts + ' reached)' : ''}`).join('; ') + '. Fragile reserve ' + chamber.fragilePorts.map(port => `${({N:'North',E:'East',S:'South',W:'West'})[port.edge]} ${port.index + 1} ≤${port.max * 100}%`).join('; ') + `. Total wrong-exit or feedback leakage must be at most ${(chamber.report.leakMax * 100).toFixed(1)}%. Every receiver and checkpoint must pass.`],
-    ['trace', 'Current safe dry-trace predictions: ' + chamber.report.paths.map(path => `${path.band}${chamber.report.source[path.band] === 0 ? ' (unpowered path)' : ''}: ${path.visited.map(cellName).join('>')} → ${path.cycle ? 'feedback loop' : path.exit?.label || 'no exit'}`).join('; ') + `. Dry trace: ${chamber.report.pass ? 'requirements pass' : 'requirements not all met'}; wrong-exit or feedback leakage ${(chamber.report.leakTotal * 100).toFixed(2)}% (limit ${(chamber.report.leakMax * 100).toFixed(1)}%); fragile reserve ${chamber.report.dangerous ? 'would overload' : 'within limit'}. Current phase fuse ${run.chambers[f.signal].faulted.includes(chamber.stage) ? 'already tripped; another commit adds no scar or strain' : chamber.report.dangerous ? 'intact; committing adds one scar and up to four strain' : 'intact; committing adds no scar or strain'}.`],
-    ['input', (chamber.complete ? 'Sealed committed source: ' : 'Actual normalized source: ') + percentages(chamber.mixture) + (chamber.complete ? '. Current global tool mixture (does not alter this sealed source): ' + percentages(run.toolMixture) : '') + '. Current relative allocations Bridge/Shelter/Surge: ' + chamber.weights.join('/') + '. Current retained tools: ' + chamber.profiles.map(profile => `${profile.action}: ${profile.available ? profile.provenance + ' [' + percentages(profile.probabilities) + ']' + (profile.id ? ' record ' + profile.id : '') : 'unavailable'}`).join('; ')],
+    ['trace', `Current ${chamber.complete ? 'sealed' : chamber.sourceMode.toUpperCase()} safe dry-trace predictions: ` + chamber.report.paths.map(path => `${path.band}${chamber.report.source[path.band] === 0 ? ' (unpowered path)' : ''}: ${path.visited.map(cellName).join('>')} → ${path.cycle ? 'feedback loop' : path.exit?.label || 'no exit'}`).join('; ') + `. Dry trace: ${chamber.report.pass ? 'requirements pass' : 'requirements not all met'}; wrong-exit or feedback leakage ${(chamber.report.leakTotal * 100).toFixed(2)}% (limit ${(chamber.report.leakMax * 100).toFixed(1)}%); fragile reserve ${chamber.report.dangerous ? 'would overload' : 'within limit'}. Current phase fuse ${run.chambers[f.signal].faulted.includes(chamber.stage) ? 'already tripped; another commit adds no scar or strain' : chamber.report.dangerous ? 'intact; committing adds one scar and up to four strain' : 'intact; committing adds no scar or strain'}.`],
+    ['input', (chamber.complete ? 'Sealed committed source: ' : `Actual normalized ${chamber.sourceMode.toUpperCase()} source: `) + percentages(chamber.mixture) + (chamber.complete ? '. Current global tool mixture (does not alter this sealed source): ' + percentages(run.toolMixture) : '') + '. Selected replay side: ' + chamber.sourceMode.toUpperCase() + '. Relative allocations Bridge/Shelter/Surge: ' + chamber.weights.join('/') + '. Retained tools: ' + chamber.profiles.map(profile => `${profile.action}: ${profile.available ? profile.provenance + (profile.paired ? ' paired' : ' legacy held fixed; no before record') + ' [' + percentages(profile.probabilities) + ']' + (profile.id ? ' record ' + profile.id : '') : 'unavailable'}`).join('; ')],
   ];
   return cards.map(([name, text]) => ({ id: `optics_${f.signal}_${name}`, text: text.slice(0, 600) }));
 }
@@ -480,9 +497,12 @@ function applyChamberOperation(run, f, op, cues, receipt) {
   run.strain = clamp(run.strain + outcome.consequence.strain, 0, 100); run.scars += outcome.consequence.scars;
   if (receipt) add(run.receipts, receipt);
   if (outcome.complete) { add(run.flags, `chamber_${site}_complete`); add(run.facts, `chamber_${site}_restored`); }
-  record(run, 'chamber-commit', { site, stage: previous, orientations, mixture: { ...run.toolMixture }, weights: [...run.toolWeights], pass: outcome.report.pass, advanced: outcome.advanced, complete: outcome.complete, consequence: outcome.consequence, provenance: ACTIONS.filter(action => run.toolWeights[ACTIONS.indexOf(action)] > 0 && run.toolBank[action]).map(action => ({ action, provenance: run.toolBank[action].provenance, id: run.toolBank[action].id || null, model_revision: run.toolBank[action].model_revision || null, weight: run.toolWeights[ACTIONS.indexOf(action)] / ACTIONS.reduce((sum, id, index) => sum + (run.toolBank[id] ? run.toolWeights[index] : 0), 0), probabilities: { ...signalVector(run.toolBank[action]) } })) });
+  record(run, 'chamber-commit', { site, stage: previous, orientations, mixture: { ...run.toolMixture }, weights: [...run.toolWeights], sourceMode: run.toolSourceMode, sourceRevision: run.revision, pass: outcome.report.pass, advanced: outcome.advanced, complete: outcome.complete, consequence: outcome.consequence, provenance: ACTIONS.filter(action => run.toolWeights[ACTIONS.indexOf(action)] > 0 && run.toolBank[action]).map(action => ({ action, provenance: run.toolBank[action].provenance, id: run.toolBank[action].id || null, model_revision: run.toolBank[action].model_revision || null, sourceMode: run.toolSourceMode, weight: run.toolWeights[ACTIONS.indexOf(action)] / ACTIONS.reduce((sum, id, index) => sum + (run.toolBank[id] ? run.toolWeights[index] : 0), 0), probabilities: { ...toolVector(run.toolBank[action], run.toolSourceMode) } })) });
   if (outcome.complete) updateSpectrumFlags(run);
-  cues.push({ kind: 'message', text: outcome.report.diagnosis }); return true;
+  const verdict = outcome.complete ? 'accepted — chamber sealed.' : outcome.advanced ? 'accepted — phase advanced.' : 'rejected — phase unchanged.';
+  const failedPower = outcome.report.sinks.find(sink => sink.received + 1e-9 < sink.min || sink.received > sink.max + 1e-9);
+  const measured = failedPower ? `${failedPower.label} received ${(failedPower.received * 100).toFixed(1)}% (required ${Math.round(failedPower.min * 100)}–${Math.round(failedPower.max * 100)}%). ` : '';
+  cues.push({ kind: 'message', text: `${run.toolSourceMode.toUpperCase()} record ${verdict} ${measured}${outcome.report.diagnosis}` }); return true;
 }
 
 function returnContext(run) {
@@ -680,7 +700,7 @@ function applyAttunement(run, intent, cues) {
     validateLocalProfile(r);
     signal = clone(r);
     if (r.steering?.applied) run.strain = clamp(run.strain + Math.ceil(6 * clamp(Number(r.steering.strength) || 0, 0, 1) * (r.steering.scope === 'broad' ? 1.5 : 1)), 0, 100);
-  } else signal = { action: r.action, provenance: 'authored', utterance: r.utterance || 'An authored recovery signal.', authored_spectrum: Chambers.recoverySpectrum(r.action) };
+  } else signal = { action: r.action, provenance: 'authored', utterance: r.utterance || 'An authored recovery signal.', authored_spectrum: Chambers.recoverySpectrum(r.action), authored_spectrum_before: Chambers.recoverySpectrumBefore(r.action) };
   if (!run.flags.includes(f.flag)) {
     if (r.action === 'BRIDGE') add(run.flags, 'shortcut_' + f.zone);
     if (r.action === 'SHELTER') run.heat = clamp(run.heat + 1, 0, 9);
@@ -836,10 +856,16 @@ export function act(state, intent) {
       if (!validWeights(intent.weights)) throw new Error('Choose three finite neural allocations from zero to 100.');
       run.toolWeights = [...intent.weights]; updateTools(run); run.revision++;
       record(run, 'tool-mix', { weights: run.toolWeights, mixture: run.toolMixture }); message = 'The routing chamber is powered by these actual retained profiles.';
+    } else if (intent.kind === 'toolSource') {
+      availableChamber(run, intent.fixture);
+      if (!['before', 'after'].includes(intent.mode)) throw new Error('Choose the before or after source.');
+      if (intent.mode === run.toolSourceMode) return { state, message: 'This source side is already selected.', cues: [] };
+      run.toolSourceMode = intent.mode; updateTools(run); run.revision++;
+      record(run, 'tool-source', { sourceMode: run.toolSourceMode, mixture: { ...run.toolMixture } }); message = `Replaying the ${run.toolSourceMode.toUpperCase()} source with the same tools, allocations and rotors.`;
     } else if (intent.kind === 'referenceTool') {
       availableChamber(run, intent.fixture);
       if (!ACTIONS.includes(intent.action)) throw new Error('Choose an authored reference action.');
-      rememberTool(run, { action: intent.action, provenance: 'authored', authored_spectrum: Chambers.recoverySpectrum(intent.action) });
+      rememberTool(run, { action: intent.action, provenance: 'authored', authored_spectrum: Chambers.recoverySpectrum(intent.action), authored_spectrum_before: Chambers.recoverySpectrumBefore(intent.action) });
       run.revision++; record(run, 'reference-tool', { action: intent.action }); message = 'Explicit authored recovery spectrum. No inference or measured activation edit.';
     } else if (intent.kind === 'referenceSignal') {
       if (finaleSources(run).every(source => source.kind === 'sealed_chamber_mix')) throw new Error('The earned chamber outputs are sealed. Compose their currents without replacing the original captures.');
@@ -883,13 +909,15 @@ function sealedComponents(run, signal, vector) {
   const event = run.events.findLast(event => event.type === 'chamber-commit' && event.site === signal && event.stage === 2 && event.pass && event.complete);
   if (!event || !Array.isArray(event.provenance) || !event.provenance.length || event.provenance.length > 3) return [];
   const records = event.provenance;
-  if (new Set(records.map(record => record.action)).size !== records.length || records.some(record => !ACTIONS.includes(record.action) || !['local', 'authored'].includes(record.provenance) || (record.provenance === 'local' && (typeof record.id !== 'string' || !record.id)) || !normalizedVector(record.probabilities))) return [];
+  if (Object.hasOwn(event, 'sourceMode') && !['before', 'after'].includes(event.sourceMode)) return [];
+  if (new Set(records.map(record => record.action)).size !== records.length || records.some(record => !ACTIONS.includes(record.action) || !['local', 'authored'].includes(record.provenance) || (record.provenance === 'local' && (typeof record.id !== 'string' || !record.id)) || !normalizedVector(record.probabilities) || Object.hasOwn(record, 'sourceMode') && record.sourceMode !== event.sourceMode)) return [];
   const rawWeights = records.map(record => finite(record.weight) && record.weight > 0 ? record.weight : event.weights?.[ACTIONS.indexOf(record.action)]);
   if (rawWeights.some(weight => !finite(weight) || weight <= 0)) return [];
   const total = rawWeights.reduce((sum, weight) => sum + weight, 0), weights = rawWeights.map(weight => weight / total);
   const reconstructed = normalizedVector(Object.fromEntries(ACTIONS.map(action => [action, records.reduce((sum, record, index) => sum + record.probabilities[action] * weights[index], 0)])));
   if (ACTIONS.some(action => Math.abs(reconstructed[action] - vector[action]) > 1e-8)) return [];
-  return records.map((record, index) => ({ action: record.action, weight: weights[index], provenance: record.provenance, recordId: record.id || null, modelRevision: record.model_revision || null }));
+  return records.map((record, index) => ({ action: record.action, weight: weights[index], provenance: record.provenance, recordId: record.id || null, modelRevision: record.model_revision || null,
+    sourceMode: event.sourceMode || 'after', sourceRevision: event.sourceRevision ?? null, probabilities: { ...record.probabilities } }));
 }
 function rawFinaleSource(signal, capture) {
   const vector = normalizedVector(signalVector(capture)), provenance = capture?.provenance === 'authored' ? 'authored' : capture?.provenance === 'local' && typeof capture.id === 'string' && capture.id ? 'local' : 'unknown';
@@ -976,7 +1004,7 @@ export function view(run) {
     terms, journal: run.facts.map(id => ({ id, text: factText(id) })), incidents: clone(run.incidents),
     conversation: run.conversation, preview: run.preview, pending: run.pending, carried: carried(run),
     map: ZONES.map(z => ({ ...z, unlocked: zones.has(z.id) })), unlockedZones: [...zones],
-    chambers: clone(run.chambers), toolBank: clone(run.toolBank), toolWeights: [...run.toolWeights], toolMixture: { ...run.toolMixture },
+    chambers: clone(run.chambers), toolBank: clone(run.toolBank), toolSourceMode: run.toolSourceMode, toolWeights: [...run.toolWeights], toolMixture: { ...run.toolMixture },
     returnLine: run.returnLine && run.mission >= 4 ? returnView(run) : null,
     spectra: clone(run.spectra), mixWeights: [...run.mixWeights], mixture: [...run.mixture], finale: finaleView(run),
     diagnostics: { version: 3, mission: run.mission, missionId: mission.id, completeObjectives: missionGoals(run).filter(g => run.flags.includes(g.flag)).length, objectives: missionGoals(run).length, revision: run.revision, pending: run.pending?.kind || null, program: run.program ? { console: run.program.console, cursor: run.program.cursor, steps: run.program.operations.length, waiting: run.program.waiting } : null, heat: run.heat, strain: run.strain, surgeSeconds: run.surgeSeconds, epilogue: run.epilogue, facts: run.facts.length, agreements: run.agreements.length, carried: carried(run), phase: run.phase },

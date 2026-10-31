@@ -30,6 +30,8 @@ The original score, *Lanterns on the Glass Meridian*, accompanies procedural sea
 
 Each retained profile has Bridge, Shelter and Surge bands. The optical puzzles use the whole distribution, not just the winning action. You blend profiles, route their bands, inspect a safe dry trace and decide when to commit.
 
+**Neural Echo** lets you replay the retained Before or After record through the same optics and mixture weights. A leading action can stay the same while its secondary bands change the route’s result. Local pairs replay an existing measured capture; browser pairs are visibly **AUTHORED** calibrations. The dry trace is safe, and Commit remains a separate choice.
+
 The demo supplies **authored calibrations**, visibly labeled. In optional Apple Silicon local-model mode, E2B can supply **measured spectra** with temporary activation steering. Saved model weights are unchanged. A target direction is not a guaranteed result, and no “personality neuron” is claimed. E4B separately translates discovered controls into reviewed work orders and matches known records or eligible agreements; it does not invent history or accept terms for you.
 
 ## Keep your crossing
