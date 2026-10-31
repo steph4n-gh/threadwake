@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { createSoundscape } from './web/audio.js';
 
 class Parameter {
@@ -50,9 +51,15 @@ class Context {
     }
   }
 }
-// Metadata-only buffers prove scheduling contracts here, not decoded audio quality.
-const virtualStem = (context, seconds = 192) => ({ numberOfChannels: 2, sampleRate: context.sampleRate,
-  length: Math.round(seconds * context.sampleRate), duration: seconds });
+// Sparse PCM mocks keep scheduling checks small; the endpoint test below uses real Float32Arrays.
+const virtualStem = (context, seconds = 192) => {
+  const length = Math.round(seconds * context.sampleRate);
+  const channels = Array.from({ length: 2 }, () => new Proxy({ length }, {
+    get: (data, key) => key in data ? data[key] : 0,
+    set: (data, key, value) => { data[key] = Math.fround(value); return true; },
+  }));
+  return { numberOfChannels: 2, sampleRate: context.sampleRate, length, duration: seconds, getChannelData: channel => channels[channel] };
+};
 const flush = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
 const ready = async (context = new Context()) => {
   const engine = createSoundscape({ context, loadAudio: async () => virtualStem(context) });
@@ -91,6 +98,51 @@ try {
     assert.equal(engine.debugSnapshot().music.status, 'failed'); assert.equal(engine.debugSnapshot().music.sources, 0);
     assert(engine.cue('pickup')); engine.dispose();
     checks.push('A191.98/192-second injected mismatch starts neither stem; failed music leaves interaction sound available.');
+  }
+  {
+    const context = new Context(), length = Math.round(192 * context.sampleRate), edge = Math.round(.004 * context.sampleRate);
+    const buffers = ['foundation', 'filigree'].map((name, stem) => {
+      const data = Array.from({ length: 2 }, (_, channel) => {
+        const values = new Float32Array(length);
+        values[0] = .12 + stem * .02; values[length - 1] = -.08 - channel * .01;
+        values[edge + 7] = .314159; values[Math.floor(length / 2)] = -.271828;
+        return values;
+      });
+      return { ...virtualStem(context), name, data, getChannelData: channel => data[channel] };
+    });
+    const interiorHash = data => createHash('sha256').update(new Uint8Array(data.buffer, edge * 4, (length - edge * 2) * 4)).digest('hex');
+    const interiors = buffers.map(buffer => buffer.data.map(interiorHash));
+    const expected = buffers.map(buffer => buffer.data.map(data => Math.fround((data[0] + data[length - 1]) / 2)));
+    const engine = createSoundscape({ context, loadAudio: async name => buffers.find(buffer => buffer.name === name) });
+    await engine.unlock(); await flush();
+    assert.equal(engine.debugSnapshot().music.status, 'ready');
+    buffers.forEach((buffer, stem) => buffer.data.forEach((data, channel) => {
+      assert.equal(data.length, length); assert.equal(data[0], expected[stem][channel]); assert.equal(data[0], data[length - 1]);
+      assert(data.every(Number.isFinite));
+      assert.equal(interiorHash(data), interiors[stem][channel]);
+    }));
+    const edges = buffers.map(buffer => buffer.data.map(data => Array.from(data.subarray(0, edge))));
+    await engine.unlock(); await flush();
+    assert.deepEqual(buffers.map(buffer => buffer.data.map(data => Array.from(data.subarray(0, edge)))), edges);
+    assert.equal(engine.debugSnapshot().music.sources, 2); assert.equal(engine.debugSnapshot().voices.active, 0);
+    engine.dispose(); assert.equal(engine.debugSnapshot().nodes, 0);
+    checks.push('Decoded endpoints become exactly equal and finite with original frame count; all interior PCM remains byte-identical, repeated unlock does not reprocess or duplicate voices.');
+  }
+  {
+    const { engine, context } = await ready();
+    const tone = context.created.find(node => node.kind === 'filter' && node.type === 'lowpass' && node.frequency.value === 2000);
+    assert(tone);
+    const ambience = context.created.find(node => node.connections.includes(tone));
+    assert.equal(ambience.connections.length, 1);
+    const master = tone.connections.find(node => node.connections.includes(context.destination));
+    const send = tone.connections.find(node => node !== master);
+    assert(master && send && send.connections.length === 1);
+    assert(context.created.some(node => node !== ambience && node.connections.includes(master) && node.connections.includes(send.connections[0]) && !node.connections.includes(tone)));
+    engine.setMuted(true); assert.equal(master.gain.events.at(-1).extra, .035);
+    engine.setMuted(false); engine.update({ hidden: false }); engine.update({ hidden: true });
+    assert.equal(master.gain.events.at(-1).extra, .020);
+    engine.dispose();
+    checks.push('One ambience lowpass feeds both dry and room paths while effects bypass it; ordinary mute keeps35ms smoothing and hidden uses20ms.');
   }
   {
     const requests = [];

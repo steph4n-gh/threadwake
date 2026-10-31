@@ -102,13 +102,13 @@ export function createSoundscape({ context: suppliedContext = null, loadAudio = 
 
   function buildGraph() {
     graph = { master: gain(0), music: gain(0), ambience: gain(0), effects: gain(0), room: gain(.16), roomInput: gain(1),
-      foundation: gain(0), filigree: gain(0), musicTone: filter('lowpass', 12000, .55) };
+      foundation: gain(0), filigree: gain(0), musicTone: filter('lowpass', 12000, .55), ambienceTone: filter('lowpass', 2000, .55) };
     graph.master.connect(context.destination);
     graph.music.connect(graph.musicTone).connect(graph.master);
-    graph.ambience.connect(graph.master); graph.effects.connect(graph.master);
+    graph.ambience.connect(graph.ambienceTone).connect(graph.master); graph.effects.connect(graph.master);
     graph.foundation.connect(graph.music); graph.filigree.connect(graph.music);
     graph.effects.connect(graph.roomInput);
-    const ambienceSend = gain(.18); graph.ambience.connect(ambienceSend).connect(graph.roomInput);
+    const ambienceSend = gain(.18); graph.ambienceTone.connect(ambienceSend).connect(graph.roomInput);
     const convolver = remember(context.createConvolver()); convolver.normalize = false; convolver.buffer = roomImpulse();
     const roomTone = filter('lowpass', 4200, .5);
     graph.roomInput.connect(convolver).connect(roomTone).connect(graph.room).connect(graph.master);
@@ -142,6 +142,22 @@ export function createSoundscape({ context: suppliedContext = null, loadAudio = 
     return buffer;
   }
 
+  function settleLoopEndpoints(buffer) {
+    const frames = Math.round(buffer.sampleRate * .004), last = buffer.length - 1;
+    for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+      const data = buffer.getChannelData(channel), firstValue = data[0], lastValue = data[last];
+      const common = (firstValue + lastValue) * .5;
+      if (!Number.isFinite(common)) throw new Error('Music has a nonfinite decoded loop endpoint.');
+      // Correct the codec boundary offset, tapering back to untouched PCM in 4 ms.
+      for (let frame = 0; frame < frames; frame++) {
+        const weight = .5 + .5 * Math.cos(Math.PI * frame / (frames - 1));
+        data[frame] += (common - firstValue) * weight;
+        data[last - frame] += (common - lastValue) * weight;
+      }
+      data[0] = data[last] = common;
+    }
+  }
+
   async function decodeStem(name) {
     const failures = [];
     for (const extension of ['ogg', 'mp3']) {
@@ -167,6 +183,7 @@ export function createSoundscape({ context: suppliedContext = null, loadAudio = 
         const buffers = await Promise.all(['foundation', 'filigree'].map(name => loader(name, context)));
         if (disposed) return;
         buffers.forEach(validateStem);
+        buffers.forEach(settleLoopEndpoints);
         const bytes = buffers.reduce((sum, buffer) => sum + buffer.length * buffer.numberOfChannels * 4, 0);
         musicBuffers = buffers; decodedBytes = bytes;
         musicEpoch = context.currentTime + .08;
@@ -188,7 +205,7 @@ export function createSoundscape({ context: suppliedContext = null, loadAudio = 
     if (!graph || disposed) return;
     const quiet = state.paused ? .42 : 1;
     const danger = Math.max(clamp((state.strain - 45) / 55), clamp((35 - state.health) / 35));
-    smooth(graph.master.gain, muted || state.hidden ? 0 : mix.master * .68, state.hidden ? .008 : .035);
+    smooth(graph.master.gain, muted || state.hidden ? 0 : mix.master * .68, state.hidden ? .020 : .035);
     smooth(graph.music.gain, mix.music * quiet, .35);
     smooth(graph.ambience.gain, mix.ambience * (state.paused ? .12 : 1), .2);
     smooth(graph.effects.gain, mix.effects, .08);

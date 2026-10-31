@@ -2,9 +2,9 @@
   "schema": 1,
   "title": "Lanterns on the Glass Meridian",
   "composer": "Gemini 4 Argon High original composition; Threadwake contributors arrangement and synthesis",
-  "renderRevision": 3,
+  "renderRevision": 4,
   "arrangement": {
-    "revision": 3,
+    "revision": 4,
     "originalScoreSHA256": "aa9f9c18f8b4016e728cd1ab019f9603774442945611c8f20308fc872473da35",
     "credit": "Original composition by Gemini 4 Argon High; revised arrangement and synthesis by Threadwake contributors.",
     "upperStemOnsetFreeWindowsSeconds": [
@@ -29,13 +29,13 @@
         161
       ]
     ],
-    "changes": "Remove crowded upper attacks while preserving all four companion phrases and later bloom. Join closing/opening F# minor voicing through sustained lower tones; remove high closing bell and fresh opening bass/pad/arpeggio reattacks. Remaining bell entrances vary by 26\u201334 ms, with small intentional velocity accents.",
+    "changes": "Remove crowded upper attacks while preserving all four companion phrases and later bloom. Join closing/opening F# minor voicing through sustained lower tones; remove high closing bell and fresh opening bass/pad/arpeggio reattacks. Remaining bell entrances vary by 26\u201334 ms, with small intentional velocity accents. R4: final-third mid-pad entrances reduce from ten to two E2/D2 pedals, selected glass voices fall an octave, sparse lower bell answers expose Mara\u2019s phrase, and four highest climax bells soften by 2 dB. First 90 seconds and the 168\u2013192 second return retain exact score events.",
     "originalCompositionEventCount": 231
   },
   "dryStereo": "Phase-coherent amplitude panning; stereo width from score positions and decorrelated room, no dry channel microdelay",
   "source": "score.json",
-  "scoreSHA256": "d48c644ed6a169fd3232714173bfb9bb899d0240b2e6e151d91949db760069e2",
-  "rendererSHA256": "8449e067b9a795f92fea8cc6ed59129e651963e58c8f0f74d9332f047abe29c2",
+  "scoreSHA256": "3da6aec657c0d5fa17c7b2990c046e0e6e1bc538b4e111785508c3a6601fbf0a",
+  "rendererSHA256": "f088e31fb370a51179e9a342850691301e7c3d682184b565913a8ad4e71ff004",
   "license": "CC-BY-4.0 to the extent rights are held; original score and synthesized audio, no recordings or samples",
   "sampleRate": 44100,
   "channels": 2,
@@ -48,24 +48,24 @@
   },
   "combinedDecodedFloat32BytesAt44100": 135475200,
   "combinedDecodedFloat32BytesAt48000": 147456000,
-  "gain": 2.2937621285744916,
+  "gain": 2.3033475172956326,
   "limiting": "None; one common linear gain with sample peak and RMS reserve",
   "fullMix": {
     "samplesPerChannel": 8467200,
     "seconds": 192.0,
-    "samplePeakDBFS": -5.46,
+    "samplePeakDBFS": -5.424,
     "rmsDBFS": -23.0,
-    "crestDB": 17.54,
+    "crestDB": 17.576,
     "oneSecondRMSPercentileDBFS": {
-      "5": -28.034,
-      "50": -23.888,
-      "95": -19.27
+      "5": -28.255,
+      "50": -23.863,
+      "95": -19.257
     },
-    "seamStepPeak": 0.0005108278710395098,
-    "seamStepVsTypicalDifferenceRMS": 0.14740087573677116,
-    "monoFoldDownDB": -0.648,
-    "sideRMSDBFS": -31.581,
-    "stereoCorrelation": 0.725580675370355,
+    "seamStepPeak": 0.0005025207065045834,
+    "seamStepVsTypicalDifferenceRMS": 0.14731929579812805,
+    "monoFoldDownDB": -0.642,
+    "sideRMSDBFS": -31.62,
+    "stereoCorrelation": 0.727918460002737,
     "nonfinite": 0,
     "hardClipSamples": 0
   },
@@ -73,38 +73,38 @@
     "foundation": {
       "samplesPerChannel": 8467200,
       "seconds": 192.0,
-      "samplePeakDBFS": -5.995,
-      "rmsDBFS": -23.15,
-      "crestDB": 17.155,
+      "samplePeakDBFS": -5.958,
+      "rmsDBFS": -23.152,
+      "crestDB": 17.194,
       "oneSecondRMSPercentileDBFS": {
-        "5": -28.108,
-        "50": -24.018,
-        "95": -19.528
+        "5": -28.426,
+        "50": -23.982,
+        "95": -19.492
       },
-      "seamStepPeak": 0.000511842779815197,
-      "seamStepVsTypicalDifferenceRMS": 0.16378234994914542,
-      "monoFoldDownDB": -0.63,
-      "sideRMSDBFS": -31.844,
-      "stereoCorrelation": 0.7331667173544234,
+      "seamStepPeak": 0.0005035309586673975,
+      "seamStepVsTypicalDifferenceRMS": 0.1612270864168817,
+      "monoFoldDownDB": -0.628,
+      "sideRMSDBFS": -31.857,
+      "stereoCorrelation": 0.7338087475122994,
       "nonfinite": 0,
       "hardClipSamples": 0
     },
     "filigree": {
       "samplesPerChannel": 8467200,
       "seconds": 192.0,
-      "samplePeakDBFS": -17.403,
-      "rmsDBFS": -37.52,
-      "crestDB": 20.117,
+      "samplePeakDBFS": -17.367,
+      "rmsDBFS": -37.73,
+      "crestDB": 20.363,
       "oneSecondRMSPercentileDBFS": {
-        "5": -118.65,
-        "50": -42.509,
-        "95": -30.665
+        "5": -120.408,
+        "50": -43.311,
+        "95": -30.79
       },
-      "seamStepPeak": 3.3063333830796182e-06,
-      "seamStepVsTypicalDifferenceRMS": 0.002222625280510554,
-      "monoFoldDownDB": -1.241,
-      "sideRMSDBFS": -43.566,
-      "stereoCorrelation": 0.505414265965248,
+      "seamStepPeak": 3.3423202694393694e-06,
+      "seamStepVsTypicalDifferenceRMS": 0.0024527265362747127,
+      "monoFoldDownDB": -1.21,
+      "sideRMSDBFS": -43.872,
+      "stereoCorrelation": 0.5167591889993782,
       "nonfinite": 0,
       "hardClipSamples": 0
     }
@@ -113,23 +113,23 @@
     "foundation.ogg": {
       "samplesPerChannel": 8467200,
       "seconds": 192.0,
-      "samplePeakDBFS": -5.981,
-      "rmsDBFS": -23.15,
-      "crestDB": 17.169,
+      "samplePeakDBFS": -5.967,
+      "rmsDBFS": -23.152,
+      "crestDB": 17.185,
       "oneSecondRMSPercentileDBFS": {
-        "5": -28.121,
-        "50": -24.018,
-        "95": -19.52
+        "5": -28.404,
+        "50": -23.975,
+        "95": -19.487
       },
-      "seamStepPeak": 0.0036324262619018555,
-      "seamStepVsTypicalDifferenceRMS": 1.1615791548562233,
-      "monoFoldDownDB": -0.629,
-      "sideRMSDBFS": -31.852,
-      "stereoCorrelation": 0.7335683336024442,
+      "seamStepPeak": 0.002761334180831909,
+      "seamStepVsTypicalDifferenceRMS": 0.8837538654052874,
+      "monoFoldDownDB": -0.628,
+      "sideRMSDBFS": -31.863,
+      "stereoCorrelation": 0.734058724965727,
       "nonfinite": 0,
       "hardClipSamples": 0,
-      "bytes": 3920293,
-      "sha256": "2c7a19b769b324d2be784533b00d9519811228c269bfe224738a53d049918b1f",
+      "bytes": 3922851,
+      "sha256": "b9ccfe83b3ad811dde4544c02812a12400cac19082c8ef34656928cc50801e36",
       "containerProbe": {
         "programs": [],
         "stream_groups": [],
@@ -145,30 +145,30 @@
         ],
         "format": {
           "duration": "192.006500",
-          "size": "3920293"
+          "size": "3922851"
         }
       }
     },
     "foundation.mp3": {
       "samplesPerChannel": 8467200,
       "seconds": 192.0,
-      "samplePeakDBFS": -6.405,
-      "rmsDBFS": -23.596,
-      "crestDB": 17.191,
+      "samplePeakDBFS": -6.354,
+      "rmsDBFS": -23.597,
+      "crestDB": 17.243,
       "oneSecondRMSPercentileDBFS": {
-        "5": -28.553,
-        "50": -24.463,
-        "95": -19.974
+        "5": -28.871,
+        "50": -24.427,
+        "95": -19.935
       },
-      "seamStepPeak": 0.010672969743609428,
-      "seamStepVsTypicalDifferenceRMS": 3.5949286400458074,
-      "monoFoldDownDB": -0.63,
-      "sideRMSDBFS": -32.289,
-      "stereoCorrelation": 0.733146503492899,
+      "seamStepPeak": 0.009021036326885223,
+      "seamStepVsTypicalDifferenceRMS": 3.0401715163351297,
+      "monoFoldDownDB": -0.629,
+      "sideRMSDBFS": -32.302,
+      "stereoCorrelation": 0.733749023107634,
       "nonfinite": 0,
       "hardClipSamples": 0,
       "bytes": 2304670,
-      "sha256": "752ed5afe97084363bdf6942a22f78f1b59bd545ad00b5c96dd3eadb4cab43ae",
+      "sha256": "7cad0c96d3aac5d0b7c7d063d0fd87a90e4225ef6131e466e18dc7ed92d0c879",
       "containerProbe": {
         "programs": [],
         "stream_groups": [],
@@ -191,23 +191,23 @@
     "filigree.ogg": {
       "samplesPerChannel": 8467200,
       "seconds": 192.0,
-      "samplePeakDBFS": -17.404,
-      "rmsDBFS": -37.518,
-      "crestDB": 20.114,
+      "samplePeakDBFS": -17.365,
+      "rmsDBFS": -37.729,
+      "crestDB": 20.364,
       "oneSecondRMSPercentileDBFS": {
-        "5": -118.643,
-        "50": -42.508,
-        "95": -30.665
+        "5": -120.397,
+        "50": -43.308,
+        "95": -30.789
       },
-      "seamStepPeak": 4.850371624343097e-06,
-      "seamStepVsTypicalDifferenceRMS": 0.003259694241740507,
-      "monoFoldDownDB": -1.241,
-      "sideRMSDBFS": -43.564,
-      "stereoCorrelation": 0.5054443304257605,
+      "seamStepPeak": 9.297332326241303e-06,
+      "seamStepVsTypicalDifferenceRMS": 0.006820793323377616,
+      "monoFoldDownDB": -1.21,
+      "sideRMSDBFS": -43.871,
+      "stereoCorrelation": 0.516656508607998,
       "nonfinite": 0,
       "hardClipSamples": 0,
-      "bytes": 4119661,
-      "sha256": "c18c5b50dc75c99c21c5872f3ee081f4d04e120483a8898d1026b3db5f65f5d5",
+      "bytes": 3917559,
+      "sha256": "1657747b8f8a7f7770d7923f0b321816a77b2d4ceafe6e29f2fca41bb58a60a0",
       "containerProbe": {
         "programs": [],
         "stream_groups": [],
@@ -223,30 +223,30 @@
         ],
         "format": {
           "duration": "192.006500",
-          "size": "4119661"
+          "size": "3917559"
         }
       }
     },
     "filigree.mp3": {
       "samplesPerChannel": 8467200,
       "seconds": 192.0,
-      "samplePeakDBFS": -17.856,
-      "rmsDBFS": -37.966,
-      "crestDB": 20.11,
+      "samplePeakDBFS": -17.809,
+      "rmsDBFS": -38.176,
+      "crestDB": 20.367,
       "oneSecondRMSPercentileDBFS": {
-        "5": -119.078,
-        "50": -42.954,
-        "95": -31.112
+        "5": -120.843,
+        "50": -43.757,
+        "95": -31.236
       },
-      "seamStepPeak": 7.697304681641981e-06,
-      "seamStepVsTypicalDifferenceRMS": 0.005446730144783294,
-      "monoFoldDownDB": -1.241,
-      "sideRMSDBFS": -44.012,
-      "stereoCorrelation": 0.5054182222858069,
+      "seamStepPeak": 2.600666630314663e-05,
+      "seamStepVsTypicalDifferenceRMS": 0.020088316137677684,
+      "monoFoldDownDB": -1.209,
+      "sideRMSDBFS": -44.319,
+      "stereoCorrelation": 0.5168468795373038,
       "nonfinite": 0,
       "hardClipSamples": 0,
       "bytes": 2304670,
-      "sha256": "876b72f195076f38428ff35cb57593a40eb0e82473dc1cd1726dd23dd269f0ea",
+      "sha256": "9f61bdfe6576ad47f0689c81d06fd4ff9860116877d448e162b4330a6465a1a9",
       "containerProbe": {
         "programs": [],
         "stream_groups": [],
@@ -302,46 +302,46 @@
   "decodedOGGMix": {
     "samplesPerChannel": 8467200,
     "seconds": 192.0,
-    "samplePeakDBFS": -5.47,
-    "rmsDBFS": -23.0,
-    "crestDB": 17.53,
+    "samplePeakDBFS": -5.448,
+    "rmsDBFS": -23.001,
+    "crestDB": 17.553,
     "oneSecondRMSPercentileDBFS": {
-      "5": -28.046,
-      "50": -23.889,
-      "95": -19.261
+      "5": -28.231,
+      "50": -23.861,
+      "95": -19.26
     },
-    "seamStepPeak": 0.0036296024918556213,
-    "seamStepVsTypicalDifferenceRMS": 1.046734381436352,
-    "monoFoldDownDB": -0.647,
-    "sideRMSDBFS": -31.588,
-    "stereoCorrelation": 0.7259826939015938,
+    "seamStepPeak": 0.0027520395815372467,
+    "seamStepVsTypicalDifferenceRMS": 0.8064378853279983,
+    "monoFoldDownDB": -0.641,
+    "sideRMSDBFS": -31.624,
+    "stereoCorrelation": 0.7281484299834206,
     "nonfinite": 0,
     "hardClipSamples": 0,
-    "integratedLUFS": -21.46,
-    "truePeakDBTP": -5.47,
-    "loudnessRangeLU": 7.7
+    "integratedLUFS": -21.47,
+    "truePeakDBTP": -5.45,
+    "loudnessRangeLU": 7.8
   },
   "decodedMP3Mix": {
     "samplesPerChannel": 8467200,
     "seconds": 192.0,
-    "samplePeakDBFS": -5.884,
+    "samplePeakDBFS": -5.84,
     "rmsDBFS": -23.446,
-    "crestDB": 17.562,
+    "crestDB": 17.606,
     "oneSecondRMSPercentileDBFS": {
-      "5": -28.48,
-      "50": -24.334,
-      "95": -19.718
+      "5": -28.7,
+      "50": -24.309,
+      "95": -19.702
     },
-    "seamStepPeak": 0.01068066619336605,
-    "seamStepVsTypicalDifferenceRMS": 3.2441737329741183,
-    "monoFoldDownDB": -0.648,
-    "sideRMSDBFS": -32.027,
-    "stereoCorrelation": 0.7255661560181415,
+    "seamStepPeak": 0.009030889719724655,
+    "seamStepVsTypicalDifferenceRMS": 2.7865425330229012,
+    "monoFoldDownDB": -0.642,
+    "sideRMSDBFS": -32.064,
+    "stereoCorrelation": 0.7278568192128898,
     "nonfinite": 0,
     "hardClipSamples": 0,
-    "integratedLUFS": -21.91,
-    "truePeakDBTP": -5.88,
-    "loudnessRangeLU": 7.6
+    "integratedLUFS": -21.92,
+    "truePeakDBTP": -5.84,
+    "loudnessRangeLU": 7.7
   },
-  "compressedBytes": 12649294
+  "compressedBytes": 12449750
 }

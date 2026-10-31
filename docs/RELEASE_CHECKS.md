@@ -19,7 +19,9 @@ A desktop Chromium browser exercised gesture unlock, the four volume channels an
 
 A browser OfflineAudioContext rendered the actual engine and final encoded assets for a scripted 20-second timeline at game defaults. It included paper, relay, rotor, motor and horn cues, an overlapping cue burst, volume changes, mute, pause and hide/show. The raw float output had no nonfinite or over-range samples; mute/hidden windows reached zero, the voice bound held and disposal cleared nodes. The four files decode to exactly 192 seconds. Original music and revised arrangements went through separate Argon audio critique; model criticism is fallible and does not establish physical-device listening quality.
 
-Encoded music totals about 12.6 MB including both codec alternatives. Two retained stereo music buffers occupy about 135.5 MB at 44.1 kHz, with additional decoder and graph overhead. This is not a measured peak-RAM cap. Physical headphones/speakers, two uninterrupted audible loops and broad device/browser sound quality remain unqualified. There is no measured quality multiplier.
+Two additional 197-second music-only browser offline renders crossed the first loop naturally through Ogg and the deliberate MP3 fallback. Each retained two synchronized sources with stable gains, no seek and no over-range or nonfinite samples. Their exported eight-second joins provide actual post-filter listening material. The MP3 boundary still has a larger local sample step than Ogg; that diagnostic is retained separately from any audible verdict.
+
+Encoded music totals about 12.5 MB including both codec alternatives. Two retained stereo music buffers occupy about 135.5 MB at 44.1 kHz, with additional decoder and graph overhead. This is not a measured peak-RAM cap. Physical headphones/speakers, two uninterrupted audible loops and broad device/browser sound quality remain unqualified. There is no measured quality multiplier.
 
 ## Remaining gates
 

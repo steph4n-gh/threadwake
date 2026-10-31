@@ -28,6 +28,8 @@ Instrument cues can reflect current Bridge, Shelter and Surge values from a reta
 - [`web/audio.js`](../web/audio.js): runtime mixing, environmental sound and event cues.
 - [`web/assets/audio/manifest.json`](../web/assets/audio/manifest.json): rendered file identities, format details and measurements.
 
+After decoding, the runtime smooths tiny encoding offsets at each music boundary over four milliseconds, keeping the exact 192-second period and aligned parts. This differs from the renderer’s musical voicing and wrapped note tails.
+
 Playing the bundled audio needs no Python audio packages. Rebuilding it requires Python with NumPy, plus `ffmpeg` and `ffprobe` on the path. From the repository root:
 
 ```sh

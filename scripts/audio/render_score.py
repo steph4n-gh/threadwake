@@ -241,7 +241,7 @@ def main():
     mix *= gain
     write_wav(args.masters / "full-mix.wav", mix)
     manifest = {"schema": 1, "title": score["title"], "composer": "renderer fixture" if args.fixture else "Gemini 4 Argon High original composition; Threadwake contributors arrangement and synthesis",
-                "renderRevision": 3, "arrangement": score.get("arrangement"), "dryStereo": "Phase-coherent amplitude panning; stereo width from score positions and decorrelated room, no dry channel microdelay",
+                "renderRevision": score.get("arrangement", {}).get("revision", 1), "arrangement": score.get("arrangement"), "dryStereo": "Phase-coherent amplitude panning; stereo width from score positions and decorrelated room, no dry channel microdelay",
                 "source": str(args.score.name) if args.score else "built-in fixture (not production)",
                 "scoreSHA256": sha(args.score) if args.score else None,
                 "rendererSHA256": sha(__file__), "license": "CC-BY-4.0 to the extent rights are held; original score and synthesized audio, no recordings or samples",

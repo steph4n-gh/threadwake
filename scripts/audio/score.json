@@ -849,14 +849,6 @@
           "pan": -0.02
         },
         {
-          "beat": 172.25,
-          "duration": 5.0,
-          "midi": 59,
-          "velocity": 0.29,
-          "instrument": "pad",
-          "pan": 0.28
-        },
-        {
           "beat": 173.0,
           "duration": 4.5,
           "midi": 66,
@@ -874,19 +866,11 @@
         },
         {
           "beat": 177.0,
-          "duration": 7.5,
-          "midi": 52,
-          "velocity": 0.28,
+          "duration": 10.0,
+          "midi": 40,
+          "velocity": 0.24,
           "instrument": "pad",
           "pan": -0.32
-        },
-        {
-          "beat": 177.25,
-          "duration": 7.25,
-          "midi": 59,
-          "velocity": 0.27,
-          "instrument": "pad",
-          "pan": 0.26
         },
         {
           "beat": 177.5,
@@ -907,31 +891,15 @@
         {
           "beat": 179.5,
           "duration": 9.5,
-          "midi": 73,
+          "midi": 61,
           "velocity": 0.24,
           "instrument": "glass",
           "pan": 0.42
         },
         {
-          "beat": 184.0,
-          "duration": 6.5,
-          "midi": 49,
-          "velocity": 0.22,
-          "instrument": "pad",
-          "pan": -0.24
-        },
-        {
-          "beat": 184.5,
-          "duration": 12.0,
-          "midi": 57,
-          "velocity": 0.23,
-          "instrument": "pad",
-          "pan": 0.24
-        },
-        {
           "beat": 185.0,
           "duration": 11.0,
-          "midi": 64,
+          "midi": 52,
           "velocity": 0.2,
           "instrument": "glass",
           "pan": -0.44
@@ -953,14 +921,6 @@
           "pan": 0.02
         },
         {
-          "beat": 190.5,
-          "duration": 6.0,
-          "midi": 50,
-          "velocity": 0.22,
-          "instrument": "pad",
-          "pan": -0.26
-        },
-        {
           "beat": 193.0,
           "duration": 3.75,
           "midi": 66,
@@ -977,14 +937,6 @@
           "pan": 0.0
         },
         {
-          "beat": 196.25,
-          "duration": 11.75,
-          "midi": 54,
-          "velocity": 0.24,
-          "instrument": "pad",
-          "pan": -0.3
-        },
-        {
           "beat": 196.5,
           "duration": 5.5,
           "midi": 64,
@@ -995,7 +947,7 @@
         {
           "beat": 198.0,
           "duration": 10.0,
-          "midi": 69,
+          "midi": 57,
           "velocity": 0.21,
           "instrument": "glass",
           "pan": 0.42
@@ -1026,19 +978,11 @@
         },
         {
           "beat": 208.25,
-          "duration": 7.75,
-          "midi": 50,
-          "velocity": 0.23,
+          "duration": 8.0,
+          "midi": 38,
+          "velocity": 0.21,
           "instrument": "pad",
           "pan": -0.28
-        },
-        {
-          "beat": 208.5,
-          "duration": 15.5,
-          "midi": 59,
-          "velocity": 0.24,
-          "instrument": "pad",
-          "pan": 0.28
         },
         {
           "beat": 209.5,
@@ -1051,7 +995,7 @@
         {
           "beat": 211.0,
           "duration": 12.0,
-          "midi": 73,
+          "midi": 61,
           "velocity": 0.2,
           "instrument": "glass",
           "pan": -0.42
@@ -1071,14 +1015,6 @@
           "velocity": 0.33,
           "instrument": "bass",
           "pan": 0.02
-        },
-        {
-          "beat": 216.5,
-          "duration": 7.5,
-          "midi": 57,
-          "velocity": 0.24,
-          "instrument": "pad",
-          "pan": -0.24
         },
         {
           "beat": 217.5,
@@ -1385,7 +1321,7 @@
           "beat": 139.205,
           "duration": 6.5,
           "midi": 83,
-          "velocity": 0.2769,
+          "velocity": 0.230315,
           "instrument": "bell",
           "pan": 0.44
         },
@@ -1409,7 +1345,7 @@
           "beat": 146.035,
           "duration": 5.5,
           "midi": 81,
-          "velocity": 0.2769,
+          "velocity": 0.230315,
           "instrument": "bell",
           "pan": -0.38
         },
@@ -1441,7 +1377,7 @@
           "beat": 155.535,
           "duration": 6.5,
           "midi": 85,
-          "velocity": 0.2769,
+          "velocity": 0.230315,
           "instrument": "bell",
           "pan": -0.44
         },
@@ -1449,7 +1385,7 @@
           "beat": 158.455,
           "duration": 7.5,
           "midi": 88,
-          "velocity": 0.2587,
+          "velocity": 0.215177,
           "instrument": "bell",
           "pan": 0.48
         },
@@ -1480,63 +1416,23 @@
         {
           "beat": 169.455,
           "duration": 5.5,
-          "midi": 81,
+          "midi": 69,
           "velocity": 0.2292,
           "instrument": "bell",
           "pan": -0.42
         },
         {
-          "beat": 174.5,
-          "duration": 3.5,
-          "midi": 76,
-          "velocity": 0.25,
-          "instrument": "pluck",
-          "pan": 0.32
-        },
-        {
           "beat": 178.455,
           "duration": 6.0,
-          "midi": 81,
+          "midi": 57,
           "velocity": 0.2587,
           "instrument": "bell",
           "pan": 0.38
         },
         {
-          "beat": 180.5,
-          "duration": 4.5,
-          "midi": 78,
-          "velocity": 0.22,
-          "instrument": "pluck",
-          "pan": -0.22
-        },
-        {
-          "beat": 187.705,
-          "duration": 4.5,
-          "midi": 81,
-          "velocity": 0.1719,
-          "instrument": "bell",
-          "pan": -0.36
-        },
-        {
-          "beat": 191.5,
-          "duration": 4.0,
-          "midi": 76,
-          "velocity": 0.19,
-          "instrument": "pluck",
-          "pan": 0.3
-        },
-        {
-          "beat": 195.0,
-          "duration": 4.5,
-          "midi": 73,
-          "velocity": 0.18,
-          "instrument": "pluck",
-          "pan": 0.2
-        },
-        {
           "beat": 199.535,
           "duration": 5.5,
-          "midi": 78,
+          "midi": 54,
           "velocity": 0.191,
           "instrument": "bell",
           "pan": -0.4
@@ -1544,7 +1440,7 @@
         {
           "beat": 218.5,
           "duration": 5.0,
-          "midi": 76,
+          "midi": 64,
           "velocity": 0.19,
           "instrument": "pluck",
           "pan": -0.32
@@ -1552,7 +1448,7 @@
         {
           "beat": 221.035,
           "duration": 5.5,
-          "midi": 81,
+          "midi": 57,
           "velocity": 0.1719,
           "instrument": "bell",
           "pan": -0.38
@@ -1641,7 +1537,7 @@
     }
   ],
   "arrangement": {
-    "revision": 3,
+    "revision": 4,
     "originalScoreSHA256": "aa9f9c18f8b4016e728cd1ab019f9603774442945611c8f20308fc872473da35",
     "credit": "Original composition by Gemini 4 Argon High; revised arrangement and synthesis by Threadwake contributors.",
     "upperStemOnsetFreeWindowsSeconds": [
@@ -1666,7 +1562,7 @@
         161
       ]
     ],
-    "changes": "Remove crowded upper attacks while preserving all four companion phrases and later bloom. Join closing/opening F# minor voicing through sustained lower tones; remove high closing bell and fresh opening bass/pad/arpeggio reattacks. Remaining bell entrances vary by 26\u201334 ms, with small intentional velocity accents.",
+    "changes": "Remove crowded upper attacks while preserving all four companion phrases and later bloom. Join closing/opening F# minor voicing through sustained lower tones; remove high closing bell and fresh opening bass/pad/arpeggio reattacks. Remaining bell entrances vary by 26\u201334 ms, with small intentional velocity accents. R4: final-third mid-pad entrances reduce from ten to two E2/D2 pedals, selected glass voices fall an octave, sparse lower bell answers expose Mara\u2019s phrase, and four highest climax bells soften by 2 dB. First 90 seconds and the 168\u2013192 second return retain exact score events.",
     "originalCompositionEventCount": 231
   }
 }
