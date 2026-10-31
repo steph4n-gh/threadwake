@@ -20,6 +20,8 @@ Open [http://127.0.0.1:8769/](http://127.0.0.1:8769/). The demo host uses only P
 
 You need a desktop browser with WebGL2 and JavaScript, plus keyboard and mouse or trackpad. WASD/arrows move, drag/wheel orbit and zoom, E interacts, R opens a nearby console or companion radio, and Escape closes a panel or pauses. The map and journal are J and L.
 
+The original score, *Lanterns on the Glass Meridian*, accompanies procedural sea, wind, machinery and interaction sounds. Open **Sound & music** in pause or H-help to adjust Master, Music, Ambience and Effects; M mutes everything without changing the mix. These preferences persist separately from your crossing. The score is composed in advance; signal tones can reflect retained instrument bands, but no model composes music during play. See [Audio](docs/AUDIO.md) for controls, credits and source details.
+
 - [Player’s field guide](web/guide.html) · [Download the PDF](web/threadwake-field-guide.pdf)
 - [Install and launch](docs/INSTALL.md) · [Optional local models](docs/LOCAL_MODEL.md)
 - [Story and companions](docs/STORY.md) · [Testing](docs/TESTING.md) · [Release checks and limits](docs/RELEASE_CHECKS.md)

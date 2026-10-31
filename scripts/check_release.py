@@ -3,6 +3,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 import json
+import hashlib
 import re
 import sys
 
@@ -12,6 +13,7 @@ SKIP = {'.git', '.venv', 'node_modules', '.test-results', '__pycache__',
 REQUIRED = ['LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md', 'ASSETS.md',
             'README.md', 'CONTRIBUTING.md', 'docs/INSTALL.md', 'docs/TESTING.md',
             'web/index.html', 'web/guide.html', 'web/threadwake-field-guide.pdf',
+            'web/audio.js', 'web/assets/audio/manifest.json', 'docs/AUDIO.md',
             'web/vendor/THREE-LICENSE.txt', 'licenses/CC-BY-4.0.txt']
 
 
@@ -82,6 +84,20 @@ def main():
     if (ROOT / 'web/threadwake-field-guide.pdf').exists():
         if not (ROOT / 'web/threadwake-field-guide.pdf').read_bytes().startswith(b'%PDF-'):
             errors.append('Manual is not a PDF')
+    # Pin the shipped encodings to their measured manifest. This is an integrity
+    # check; actual decoding and listening remain separate release checks.
+    manifest_path = ROOT / 'web/assets/audio/manifest.json'
+    if manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text())
+        expected = {f'{stem}.{codec}' for stem in ('foundation', 'filigree') for codec in ('ogg', 'mp3')}
+        if set(manifest['files']) != expected:
+            errors.append('Audio manifest must contain both stems and codec alternatives')
+        identities = {ROOT / 'scripts/audio/score.json': manifest['scoreSHA256'],
+                      ROOT / 'scripts/audio/render_score.py': manifest['rendererSHA256']}
+        identities.update({manifest_path.parent / name: entry['sha256'] for name, entry in manifest['files'].items()})
+        for path, digest in identities.items():
+            if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+                errors.append('Audio source/asset differs from measured manifest: ' + str(path.relative_to(ROOT)))
     print(json.dumps({'pass': not errors, 'files_checked': len(files),
                       'local_links_checked': links, 'errors': errors}, indent=2))
     return bool(errors)

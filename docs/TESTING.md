@@ -9,7 +9,7 @@ npm test
 python3 scripts/check_release.py
 ```
 
-The public test driver uses built-in Node/Python facilities. It needs no model files, download, GPU or browser. Its ten groups cover authored campaign rules, saves/fallbacks, optical routing, record matching, request/proposal boundaries, the stdlib host, model-file setup, resource-guard failures and the native probe’s owned-child cleanup using a toy worker. The optional MLX CPU-math tests are deliberately outside this dependency-free command; it does not count unrun native tests as passed. Generated results go to the ignored `.test-results/` directory. The release checker separately checks public package links, assets, file scope and privacy.
+The public test driver uses built-in Node/Python facilities. It needs no model files, download, GPU or browser. Its eleven groups cover authored campaign rules, saves/fallbacks, optical routing, record matching, mocked audio lifecycle and codec fallback, request/proposal boundaries, the stdlib host, model-file setup, resource-guard failures and the native probe’s owned-child cleanup using a toy worker. The optional MLX CPU-math tests are deliberately outside this dependency-free command; it does not count unrun native tests as passed. Generated results go to the ignored `.test-results/` directory. The release checker separately checks public package links, assets, file scope and privacy.
 
 These checks do not prove that the 3D interface is readable, that native inference worked, or that an hour of play is engaging. State what you actually tested in a change report.
 
@@ -18,6 +18,14 @@ These checks do not prove that the 3D interface is readable, that native inferen
 Start `python3 -B server.py`. In a fresh save slot, check title readiness, Begin, movement, orbit/zoom, interaction prompt, pause/resume and Continue. Use an isolated slot for tests that start a new crossing. Check narrow and desktop guide layouts, keyboard navigation, every FAQ answer and the PDF link.
 
 For world/UI changes, retain unmodified screenshots at the actual viewport. Check instrument readability and near/behind visibility, then exercise the relevant ordinary-control route. Fixtures are useful for a bounded state, but are not a complete campaign playthrough.
+
+## Audio checks
+
+Use an isolated save slot and record the browser, audio output and source revision. Start with a comfortable device volume. Open **Sound & music** in pause and H-help; use pointer and keyboard controls to adjust Master, Music, Ambience and Effects. Confirm the displayed percentages agree in both panels. Check M and the mute button in the world, pause and help, including while a volume slider has focus. Muting must preserve the four levels. Reload and Continue to check preferences persist independently of the crossing; do not clear site data or replace an unrelated save for this check.
+
+Listen to the score alone, ambience alone and effects alone, then together. Exercise ordinary movement, a companion briefing and a discovered machine control; check distance and camera direction where relevant. Confirm a signal cue reflects the currently retained bands without relabeling an authored calibration as a measured model result. Check pause, hide/show and mute/unmute transitions for unwanted sound, abrupt changes and duplicate playback. Include at least two full 192-second music loops when assessing repetition and the join; preserve interruptions and failures instead of treating elapsed time as a pass.
+
+Check music loading and the MP3 alternative in an owned browser fixture, including unavailable assets and a fresh browser profile that has not yet allowed audio. Keep this separate from listening through the player's actual output device. Rebuild and decoded-file checks should record sample count, codec, peak level, clipping/nonfinite samples, loop boundary and stereo-to-mono behavior. Automated graph/codec measurements, an audible-device listening pass and subjective music preference are different evidence; report each separately. See [AUDIO.md](AUDIO.md) for source and build details. None of these checks alone qualifies the full campaign or a quantified sound-quality improvement.
 
 ## Optional native checks
 

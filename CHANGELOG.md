@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-alpha.2 - 2026-10-31
+
+- Add *Lanterns on the Glass Meridian*, an original 192-second score in two synchronized music parts, with original virtual instruments and procedural world sounds.
+- Add separate Master, Music, Ambience and Effects controls in pause and help, plus a global mute that preserves the mix. Audio preferences are stored independently of the crossing save.
+- Connect machinery, interactions, companion motifs and signal-band tones to game events. The music is composed in advance; retained signal values can shape instrument cues.
+- Update audio attribution, testing instructions and the downloadable field guide.
+
 ## 0.1.0-alpha.1 - 2026-10-31
 
 Initial public alpha.

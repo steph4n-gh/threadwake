@@ -12,6 +12,7 @@ const suites = [
   ['optical-domain', process.execPath, ['campaign-chambers.test.mjs']],
   ['chamber-integration', process.execPath, ['campaign-chamber-integration.test.mjs']],
   ['record-matching', process.execPath, ['campaign-record-match.test.mjs']],
+  ['audio-engine', process.execPath, ['audio-engine.test.mjs']],
   ['campaign-model-contract', 'python3', ['-B', 'campaign_mind_test.py']],
   ['worker-protocol', 'python3', ['-B', 'brain_contract_test.py']],
   ['host-contract', 'python3', ['-B', 'tests/test_host.py']],

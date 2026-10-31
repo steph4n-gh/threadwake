@@ -4,6 +4,7 @@ import { ZONES, PEOPLE, FIXTURES, MISSIONS, FACTS } from './campaign-data.js';
 import { createCampaignWorld } from './campaign-world.js';
 import { ROUTES, slideBridgeMove } from './campaign-ground.js';
 import { createChamberDisplay } from './chamber-display.js';
+import { createSoundscape } from './audio.js';
 
 const $ = id => document.getElementById(id);
 async function detectLocalMind() {
@@ -24,13 +25,17 @@ document.body.dataset.edition = edition;
 const apiBase = new URL('./api/', location.href);
 const ACTIONS = ['BRIDGE', 'SHELTER', 'SURGE'];
 const SIGNALS = ['voice', 'shelter', 'storm'];
-const COMPANION_MOTIFS = {
-  marin: {"notes":[66,64,73,69],"durations":[0.15,0.15,0.22,0.4],"wave":"triangle","gain":0.085},
-  vale: {"notes":[57,64,62,61],"durations":[0.34,0.28,0.34,0.44],"wave":"sine","gain":0.09},
-  iona: {"notes":[69,74,73,76],"durations":[0.14,0.14,0.3,0.18],"wave":"triangle","gain":0.075},
-  mara: {"notes":[73,71,66,64],"durations":[0.28,0.24,0.34,0.44],"wave":"sine","gain":0.065}
-};
-let nextCompanionMotifAt = 0;
+const soundscape = createSoundscape();
+const AUDIO_PREFERENCES_KEY = 'threadwake-audio-v1';
+const soundPreferences = { muted: false, master: .75, music: .6, ambience: .75, effects: .8 };
+try {
+  const stored = JSON.parse(localStorage.getItem(AUDIO_PREFERENCES_KEY));
+  for (const channel of ['master', 'music', 'ambience', 'effects']) if (Number.isFinite(stored?.[channel])) soundPreferences[channel] = Math.max(0, Math.min(1, stored[channel]));
+  soundPreferences.muted = stored?.muted === true;
+} catch {}
+soundscape.setMix(soundPreferences); soundscape.setMuted(soundPreferences.muted);
+let soundUnlocked = false, lastSoundUpdate = -Infinity;
+const soundCueTimes = new Map();
 const PORTRAITS = { marin: './assets/portraits/marin.png', vale: './assets/portraits/vale.png', iona: './assets/portraits/iona.png', mara: './assets/portraits/mara.png' };
 const slot = new URLSearchParams(location.search).get('slot')?.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 26) || 'main';
 const saveKey = 'threadwake-public-v3:' + edition + ':' + encodeURIComponent(new URL('.', location.href).pathname) + ':' + slot;
@@ -56,7 +61,7 @@ let yaw = .35, zoom = 30, simTime = 0, realTime = 0, lastInput = performance.now
 let falling = 0, pulseCooldown = 0, pulseVisual = 0, hurtCooldown = 0, physicsAccumulator = 0;
 let dragging = false, pointerX = 0, job = null, scope = 'focused', bias = 'SURGE', strength = .5;
 let lastHud = 0, lastDiagnostics = 0, lastSave = 0, toastUntil = 0, factUntil = 0;
-let soundOn = true, audio = null, journalTab = 'facts', epilogue = false, fps = 60, frameCount = 0, fpsTime = 0;
+let journalTab = 'facts', epilogue = false, fps = 60, frameCount = 0, fpsTime = 0;
 let chamberDisplay = null, lastChamberStage = '', dialogueReturnMachine = null, cinematic = null;
 let healthStatus = localMind.status, lastDialogueKey = '', lastWorkbenchKey = '', lastMission = 0;
 let workOrderFeedback = null;
@@ -102,7 +107,7 @@ function visible(id, value) { $(id).classList.toggle('hidden', !value); }
 function touch() { lastInput = performance.now(); cinematic = null; }
 function clearInput() { keys.clear(); dragging = false; worldTableGesture = null; velocity.set(0, 0); }
 function message(text, duration = 6) { if (!text) return; $('toast').textContent = text; toastUntil = realTime + duration; visible('toast', true); }
-function factMessage(id) { const text = FACTS[id] || id; $('factTitle').textContent = 'Kept in the record.'; $('factBody').textContent = text; factUntil = realTime + 10; visible('factToast', true); chime('fact'); }
+function factMessage(id) { const text = FACTS[id] || id; $('factTitle').textContent = 'Kept in the record.'; $('factBody').textContent = text; factUntil = realTime + 10; visible('factToast', true); }
 function engaged() { return run.clock.exploration + run.clock.deliberation; }
 function formatTime(seconds) { const m = Math.floor(seconds / 60), s = Math.floor(seconds % 60).toString().padStart(2, '0'); return `${m}:${s}`; }
 function escapeInputFocus() { document.activeElement?.blur(); }
@@ -112,9 +117,10 @@ function save() {
 }
 function commit(outcome, options = {}) {
   if (!outcome) return;
-  const beforeFacts = new Set(run.facts), beforeMission = run.mission, beforePhase = run.phase;
+  const before = run, beforeFacts = new Set(run.facts), beforeMission = run.mission, beforePhase = run.phase;
   if (outcome.state.preview?.kind === 'work_order') workOrderFeedback = null;
   run = outcome.state; projection = Campaign.view(run);
+  playCampaignAudio(before, outcome);
   if (outcome.message && !options.quiet) message(outcome.message, outcome.message.length > 170 ? 9 : 6);
   for (const id of run.facts) if (!beforeFacts.has(id)) factMessage(id);
   for (const cue of outcome.cues || []) {
@@ -123,11 +129,10 @@ function commit(outcome, options = {}) {
     if (cue.kind === 'message' && cue.text) message(cue.text === projection.returnLine?.lastMeasurement?.text ? returnLineMessage(projection.returnLine) : cue.text, 9);
     const target = FIXTURES.find(f => f.id === cue.fixture) || run.pos;
     world.pulse(target, cue.kind === 'attuned' ? 0xddc184 : 0xc0e3b2);
-    if (cue.kind !== 'conversation') chime(cue.kind === 'attuned' ? 'signal' : 'repair');
   }
   if (run.mission !== beforeMission) {
     closePanel(); clearInput(); activeMachine = null; workOrderFeedback = null; lastWorkbenchKey = ''; lastDialogueKey = '';
-    message(`CHAPTER ${String(run.mission + 1).padStart(2, '0')} · ${projection.mission.title}`, 9); chime('chapter');
+    message(`CHAPTER ${String(run.mission + 1).padStart(2, '0')} · ${projection.mission.title}`, 9);
   }
   if (beforePhase !== 'victory' && run.phase === 'victory') showEnding();
   if (!options.noSave && run !== outcome.previous) save();
@@ -137,7 +142,7 @@ function commit(outcome, options = {}) {
   if (panel === 'composer') updateComposer();
   publishDiagnostics();
 }
-function act(intent, options) { commit(Campaign.act(run, intent), options); }
+function act(intent, options) { const outcome = Campaign.act(run, intent); if (outcome.state === run && outcome.message && ['manual', 'interact', 'confirm', 'acceptTerm'].includes(intent.kind)) soundCue('interlock', { id: intent.console || intent.id || intent.term, position: { ...run.pos } }); commit(outcome, options); }
 function begin(continuing = false) {
   if (worldTableSession) exitWorldTable();
   cinematic = null; workOrderFeedback = null; run = Campaign.start(continuing ? saved : null); projection = Campaign.view(run);
@@ -145,7 +150,7 @@ function begin(continuing = false) {
   stats.frameIntervals = { session: run.epoch, playing: frameBucket(), inference: frameBucket() }; frameIntervalActive = false;
   falling = pulseCooldown = pulseVisual = hurtCooldown = physicsAccumulator = 0; clearInput(); touch(); world.reset();
   for (const id of panelIds) visible(id, false); panel = null; visible('pause', false); visible('title', false); visible('ending', false); visible('hud', true);
-  lastDialogueKey = lastWorkbenchKey = ''; initAudio(); updateSound();
+  lastDialogueKey = lastWorkbenchKey = ''; unlockSound(); updateSound();
   if (run.restoreWarning) message('The saved crossing could not be restored: ' + run.restoreWarning, 12);
   else message(continuing ? 'Your people, parts and promises are right where you left them.' : 'Explore the refuge. E works with the nearby object or person.', 10);
   camera.position.set(run.pos.x + Math.sin(yaw) * zoom, zoom * .72 + 1.5, run.pos.z + Math.cos(yaw) * zoom);
@@ -180,38 +185,82 @@ function closePanel(options = {}) {
 }
 function togglePause(force) {
   if (mode !== 'playing' || panel) return;
-  paused = typeof force === 'boolean' ? force : !paused; frameIntervalActive = false; clearInput(); escapeInputFocus(); visible('pause', paused); touch(); if (paused) save();
+  paused = typeof force === 'boolean' ? force : !paused; frameIntervalActive = false; clearInput(); escapeInputFocus(); visible('pause', paused); touch(); if (paused) save(); updateSoundscape(true); if (!paused) unlockSound();
   $(paused ? 'resumeButton' : 'world').focus({ preventScroll: true });
 }
 function toTitle() { save(); closePanel(); mode = 'title'; paused = false; epilogue = false; visible('pause', false); visible('ending', false); visible('hud', false); visible('title', true); try { saved = JSON.parse(localStorage.getItem(saveKey)); visible('continueButton', !!saved); } catch {} }
-function initAudio() {
-  if (audio) { audio.resume(); return; }
-  const Audio = window.AudioContext || window.webkitAudioContext; if (!Audio) return;
-  audio = new Audio(); audio.master = audio.createGain(); audio.master.gain.value = soundOn ? .09 : 0; audio.master.connect(audio.destination);
-  for (const f of [110, 164.81, 220, 277.18]) { const o = audio.createOscillator(), g = audio.createGain(); o.type = 'sine'; o.frequency.value = f; g.gain.value = .032; o.connect(g).connect(audio.master); o.start(); }
+function unlockSound() {
+  if (soundPreferences.muted) return;
+  void soundscape.unlock().then(ready => { soundUnlocked = ready; updateSound(); }).catch(() => { soundUnlocked = false; updateSound(); });
 }
-function updateSound() { if (audio) audio.master.gain.setTargetAtTime(soundOn ? .09 : 0, audio.currentTime, .15); $('soundButton').textContent = soundOn ? '♫' : '♩'; }
-function playCompanionMotif(person) {
-  const motif = COMPANION_MOTIFS[person];
-  if (!audio || !soundOn || !motif || audio.currentTime < nextCompanionMotifAt) return;
-  let at = audio.currentTime + .015;
-  motif.notes.forEach((note, index) => {
-    const duration = motif.durations[index], oscillator = audio.createOscillator(), gain = audio.createGain();
-    oscillator.type = motif.wave; oscillator.frequency.value = 440 * 2 ** ((note - 69) / 12);
-    gain.gain.setValueAtTime(0, at);
-    gain.gain.linearRampToValueAtTime(motif.gain, at + .015);
-    gain.gain.linearRampToValueAtTime(motif.gain * .65, at + duration * .55);
-    gain.gain.linearRampToValueAtTime(0, at + duration);
-    oscillator.connect(gain).connect(audio.master); oscillator.start(at); oscillator.stop(at + duration + .01);
-    oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
-    at += duration;
-  });
-  nextCompanionMotifAt = at + .12;
+function updateSound(persist = false) {
+  soundscape.setMix(soundPreferences); soundscape.setMuted(soundPreferences.muted);
+  $('soundButton').textContent = soundPreferences.muted ? '♩' : '♫';
+  $('soundButton').title = (soundPreferences.muted ? 'Unmute sound' : 'Mute sound') + ' · M';
+  $('soundButton').setAttribute('aria-label', $('soundButton').title);
+  $('soundButton').setAttribute('aria-pressed', String(soundPreferences.muted));
+  document.querySelectorAll('[data-audio-mute]').forEach(button => { button.textContent = soundPreferences.muted ? 'Unmute sound · M' : 'Mute sound · M'; button.setAttribute('aria-pressed', String(soundPreferences.muted)); });
+  document.querySelectorAll('[data-audio-channel]').forEach(input => { input.value = Math.round(soundPreferences[input.dataset.audioChannel] * 100); input.previousElementSibling.querySelector('output').textContent = input.value + '%'; });
+  const statusText = soundPreferences.muted ? 'Sound is muted. Your mix is kept.' : soundUnlocked ? 'Sound is on. M mutes without changing your mix.' : 'Sound begins when you start the crossing or use a sound control.';
+  document.querySelectorAll('[data-audio-status]').forEach(status => { if (status.textContent !== statusText) status.textContent = statusText; });
+  if (persist) try { localStorage.setItem(AUDIO_PREFERENCES_KEY, JSON.stringify(soundPreferences)); } catch {}
 }
-function chime(kind = 'repair') {
-  if (!audio || !soundOn) return;
-  const notes = kind === 'hurt' ? [82.4, 87.3] : kind === 'chapter' ? [220, 293.66, 369.99, 440, 587.33] : kind === 'signal' ? [130.81, 196, 261.63, 392] : kind === 'fact' ? [523.25, 659.25] : [261.63, 329.63, 392];
-  notes.forEach((f, i) => { const t = audio.currentTime + i * .075, o = audio.createOscillator(), g = audio.createGain(); o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.12, t + .025); g.gain.exponentialRampToValueAtTime(.001, t + .7); o.connect(g).connect(audio.master); o.start(t); o.stop(t + .75); });
+function toggleSound() { soundPreferences.muted = !soundPreferences.muted; updateSound(true); unlockSound(); }
+function soundCue(kind, details = {}) {
+  const key = kind + ':' + (details.id || ''), now = performance.now();
+  const gap = kind === 'signal' ? 150 : kind === 'fact' ? 180 : 70;
+  if (now - (soundCueTimes.get(key) ?? -Infinity) < gap) return;
+  soundCueTimes.set(key, now); soundscape.cue(kind, details);
+}
+function updateSoundscape(force = false) {
+  if (!force && realTime - lastSoundUpdate < .1) return;
+  lastSoundUpdate = realTime;
+  const zone = ZONES.find(z => Math.hypot(run.pos.x - z.x, run.pos.z - z.z) <= z.radius);
+  const sheltered = scene.getObjectByName('gallery_weather_strands')?.material.uniforms.sheltered.value || 0;
+  const wind = zone?.id === 'gallery' ? 1 - sheltered * .8 : zone ? .25 : .7;
+  const emitters = [];
+  for (const fixture of FIXTURES) {
+    let kind, active = false;
+    if (fixture.id === 'gallery_return_console') { kind = 'water'; active = run.flags.includes('return_line_commissioned'); }
+    else if (fixture.id === 'gallery_console') { kind = 'wind'; active = 1 - sheltered * .8; }
+    else if (fixture.id === 'wake_console') { kind = 'machine'; active = run.flags.includes('refuge_lit') || run.motions.some(motion => motion.source === fixture.id); }
+    else if (fixture.kind === 'attune') { kind = 'signal'; active = !!run.spectra[fixture.signal]; }
+    else if (fixture.id === 'pantry_console') { kind = 'machine'; active = run.flags.includes('heater_tested'); }
+    else if (fixture.kind === 'console') { kind = 'machine'; active = run.motions.some(motion => motion.source === fixture.id); }
+    if (kind && active && Math.hypot(run.pos.x - fixture.x, run.pos.z - fixture.z) < 38) emitters.push({ id: fixture.id, kind, position: { x: fixture.x, z: fixture.z }, active });
+  }
+  emitters.sort((a, b) => Math.hypot(a.position.x - run.pos.x, a.position.z - run.pos.z) - Math.hypot(b.position.x - run.pos.x, b.position.z - run.pos.z));
+  const direction = cameraGroundForward();
+  const machine = panel === 'workbench' ? machinePanel() : worldTableAvailable() ? worldTableMachine() : null;
+  const signalFixture = FIXTURES.find(f => f.kind === 'attune' && (panel === 'attune' && f.id === activeAttune || Math.hypot(run.pos.x - f.x, run.pos.z - f.z) < 6));
+  const signal = run.spectra[signalFixture?.signal];
+  const signalBands = panel === 'composer' ? Object.fromEntries(ACTIONS.map((action, i) => [action, run.mixture[i]])) : machine?.chamber ? run.toolMixture : signal?.probabilities_after || signal?.authored_spectrum || { BRIDGE: 0, SHELTER: 0, SURGE: 0 };
+  soundscape.update({ signalBands, position: { ...run.pos }, yaw: Math.atan2(-direction.x, -direction.y), zone: zone?.id || 'threads', wind, strain: run.strain, health: run.health, speed: mode === 'playing' && !panel && !paused && falling === 0 ? velocity.length() : 0, pending: !!run.pending, paused: paused || mode === 'title', hidden: document.hidden, completed: run.phase === 'victory' ? 1 : run.mission / MISSIONS.length, emitters: emitters.slice(0, 8) });
+}
+function playCampaignAudio(before, outcome) {
+  const previous = JSON.stringify(before.events.at(-1));
+  const events = previous === JSON.stringify(run.events.at(-1)) ? [] : run.events.slice(previous ? run.events.findLastIndex(row => JSON.stringify(row) === previous) + 1 : 0);
+  const fixtureFor = row => FIXTURES.find(f => f.id === row.console || f.id === row.fixture || row.fact && f.fact === row.fact || row.site && f.signal === row.site || row.item && f.item === row.item);
+  const detailsFor = row => { const fixture = fixtureFor(row); return { id: row.console || row.fixture || row.id || row.fact || row.site || row.item || row.type, position: fixture ? { x: fixture.x, z: fixture.z } : { ...run.pos }, material: fixture?.zone === 'index' ? 'paper' : 'metal' }; };
+  for (const cue of outcome.cues || []) {
+    const details = detailsFor(cue), fixture = fixtureFor(cue);
+    if (cue.kind === 'control') soundCue(fixture?.chamber ? 'chamber-turn' : fixture?.machine.handles.find(handle => handle.id === cue.handle)?.op === 'route' ? 'route' : 'control', { ...details, id: cue.console, value: cue.value });
+    else if (cue.kind === 'trigger') soundCue('trigger', { ...details, id: cue.trigger });
+    else if (cue.kind === 'motion' || cue.kind === 'motion-complete') { const motion = (cue.kind === 'motion' ? run : before).motions.find(m => m.id === cue.id), source = FIXTURES.find(f => f.id === motion?.source); soundCue(cue.kind, { ...details, id: cue.id, seconds: cue.seconds, position: source ? { x: source.x, z: source.z } : details.position }); }
+    else if (cue.kind === 'installed' || cue.kind === 'fact') soundCue(cue.kind, details);
+    else if (cue.kind === 'attuned') { const signal = run.spectra[fixture?.signal]; soundCue('signal', { ...details, action: cue.action, vector: signal?.probabilities_after || signal?.authored_spectrum }); }
+    else if (cue.kind === 'chapter' || cue.kind === 'victory') soundCue(cue.kind, details);
+  }
+  for (const event of events) {
+    const details = detailsFor(event);
+    if (event.type === 'item-carried' || event.type === 'item-dropped') soundCue(event.type === 'item-carried' ? 'pickup' : 'drop', details);
+    else if (event.type === 'agreement') soundCue('agreement', { ...details, id: event.term, material: 'paper' });
+    else if (event.type === 'chamber-probe' || event.type === 'chamber-commit') soundCue(event.type, { ...details, pass: event.pass, complete: event.complete, vector: event.mixture || run.toolMixture });
+    else if (event.type === 'return-line-operation') { const op = event.operation; soundCue(op.op === 'set' ? 'control' : op.trigger === 'return_line_fit' ? 'installed' : 'trigger', { ...detailsFor({ console: 'gallery_return_console' }), id: op.handle || op.trigger }); }
+    else if (event.type === 'return-line-commissioned' || event.type === 'return-line-parked') soundCue('return-flow', { ...detailsFor({ console: 'gallery_return_console' }), active: true });
+    else if (['tool-mix', 'mix', 'reference-tool'].includes(event.type)) soundCue('signal', { ...details, vector: event.type === 'mix' ? Object.fromEntries(ACTIONS.map((action, i) => [action, run.mixture[i]])) : run.toolMixture, action: event.action });
+    else if (event.type === 'recovered') soundCue('recover', details);
+  }
 }
 function nearestInteraction() {
   let nearest = null, distance = 3.4;
@@ -232,7 +281,7 @@ function talk(person = 'iona', returnMachine = null) {
   const companion = PEOPLE.find(p => p.id === person), text = contextualBriefing(companion, run);
   const previous = run.conversation.findLast(row => row.person === person && row.provenance === 'authored');
   if (previous?.text !== text) act({ kind: 'authoredTalk', person, text }, { quiet: true });
-  openPanel('dialogue'); renderDialogue(); playCompanionMotif(person);
+  openPanel('dialogue'); renderDialogue(); soundscape.companion(person);
 }
 function openMachine(f) { if (activeMachine !== f.id) { $('planInput').value = ''; workOrderFeedback = null; } activeMachine = f.id; lastWorkbenchKey = ''; openPanel('workbench'); renderWorkbench(); }
 function openSignal(f) { activeAttune = f.id; openPanel('attune'); $('attuneName').textContent = f.label; $('attuneDescription').textContent = browserEdition ? 'Choose an authored calibration spectrum to carry into this routing chamber. Its sidebands and the machine’s consequences are playable; this browser edition performs no model inference or activation edit.' : f.description || 'Capture a living signal to carry through the crossing.'; $('signalInput').value = `Help us carry the ${f.signal} signal through the Last Crossing.`; renderTuning(); }
@@ -993,7 +1042,7 @@ function showEnding() {
   $('endingStats').replaceChildren();
   const values = [[String(MISSIONS.length).padStart(2, '0'), 'CHAPTERS REMEMBERED'], [String(run.facts.length), 'FACTS KEPT'], [String(run.agreements.length), 'PROMISES RECORDED'], [formatTime(run.ending?.engagedSeconds ?? engaged()), 'ENGAGED JOURNEY']];
   for (const [value, label] of values) { const e = document.createElement('div'), b = document.createElement('b'); b.textContent = value; e.append(b, document.createTextNode(label)); $('endingStats').append(e); }
-  chime('chapter'); save();
+  save();
 }
 function refreshHud() {
   projection = Campaign.view(run);
@@ -1136,7 +1185,7 @@ function updateWaypoints() {
   }
 }
 function damage(amount) {
-  if (hurtCooldown > 0 || epilogue) return; run.health = Math.max(0, run.health - amount); hurtCooldown = 1.3; chime('hurt');
+  if (hurtCooldown > 0 || epilogue) return; run.health = Math.max(0, run.health - amount); hurtCooldown = 1.3; soundCue('hurt', { position: { ...run.pos } });
   $('hud').classList.remove('damage-flash'); void $('hud').offsetWidth; $('hud').classList.add('damage-flash');
   if (run.health <= 0) { act({ kind: 'recover' }); velocity.set(0, 0); falling = 0; player.position.y = 1.2; hurtCooldown = 3; }
 }
@@ -1146,7 +1195,7 @@ function cameraGroundForward() {
 }
 function pulse() {
   if (pulseCooldown > 0 || run.energy < 20) return;
-  pulseCooldown = run.surgeSeconds > 0 ? .65 : 1.3; run.energy -= 20; pulseVisual = 1; pulseRing.position.set(run.pos.x, (world.heightAt(run.pos.x, run.pos.z, run) ?? 0) + .14, run.pos.z); world.pulse(run.pos, 0xc5e5be); chime('signal');
+  pulseCooldown = run.surgeSeconds > 0 ? .65 : 1.3; run.energy -= 20; pulseVisual = 1; pulseRing.position.set(run.pos.x, (world.heightAt(run.pos.x, run.pos.z, run) ?? 0) + .14, run.pos.z); world.pulse(run.pos, 0xc5e5be); soundCue('pulse', { position: { ...run.pos } });
   const direction = velocity.length() > .3 ? velocity.clone().normalize() : cameraGroundForward(); velocity.addScaledVector(direction, 8);
 }
 function move(dt) {
@@ -1194,7 +1243,7 @@ function animateSignal() {
   for (let i = 0; i < 3; i++) { ctx.beginPath(); for (let x = 0; x < canvas.width; x++) { const envelope = Math.sin(x / canvas.width * Math.PI), local = scope === 'broad' ? 1 : Math.exp(-Math.pow((x - 480) / 150, 2)); const y = 47 + Math.sin(x * .032 + realTime * 1.6 + i * .7) * (7 + strength * 25) * envelope * local + i * 3; ctx.lineTo(x, y); } ctx.strokeStyle = ['#bed8ae', '#8dbfa8', '#d4bd86'][i]; ctx.globalAlpha = .35 + i * .18; ctx.stroke(); } ctx.globalAlpha = 1;
 }
 function publishDiagnostics() {
-  const state = { version: '3.0.0', edition, nativeAvailable: localMind.available, mode, paused, panel, activePerson, activeMachine, activeAttune, yaw, zoom, fps, healthStatus, interaction: nearestInteraction(), projection: { mission: projection.mission, objectives: projection.objectives, fixtures: projection.fixtures, people: projection.people, machines: projection.machines, terms: projection.terms, finale: projection.finale, returnLine: projection.returnLine }, run: Campaign.snapshot(run, { diagnostics: true }), timing: { engaged: engaged(), categories: run.clock }, render: { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length }, stats };
+  const state = { version: '3.0.0', audio: soundscape.debugSnapshot(), edition, nativeAvailable: localMind.available, mode, paused, panel, activePerson, activeMachine, activeAttune, yaw, zoom, fps, healthStatus, interaction: nearestInteraction(), projection: { mission: projection.mission, objectives: projection.objectives, fixtures: projection.fixtures, people: projection.people, machines: projection.machines, terms: projection.terms, finale: projection.finale, returnLine: projection.returnLine }, run: Campaign.snapshot(run, { diagnostics: true }), timing: { engaged: engaged(), categories: run.clock }, render: { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length }, stats };
   $('world').dataset.state = JSON.stringify(state);
 }
 function animate() {
@@ -1225,6 +1274,7 @@ function animate() {
   world.updateRoofOcclusion(camera, player.visible && mindVisual.visible ? mindVisual : null, dt);
   updateWaypoints();
   if (mode === 'playing' && !panel && !paused && hudCrewName) hudCrewName.visible = false;
+  updateSoundscape();
   animateSignal(); if (panel === 'workbench' && machinePanel()?.chamber) chamberDisplay?.render(simTime); renderer.render(scene, camera); stats.frames++; frameCount++; fpsTime += raw;
   if (fpsTime >= 1) { fps = frameCount / fpsTime; fpsTime = 0; frameCount = 0; }
   if (realTime - lastDiagnostics > .4) { lastDiagnostics = realTime; publishDiagnostics(); }
@@ -1233,7 +1283,7 @@ function animate() {
 $('startButton').onclick = () => begin();
 $('continueButton').onclick = () => begin(true);
 $('brand').onclick = event => { event.preventDefault(); if (mode === 'playing') { if (panel) closePanel(); togglePause(true); } };
-$('soundButton').onclick = () => { initAudio(); soundOn = !soundOn; updateSound(); };
+$('soundButton').onclick = toggleSound;
 $('pauseButton').onclick = () => { if (panel) closePanel(); togglePause(); };
 $('resumeButton').onclick = () => togglePause(false);
 $('restartButton').onclick = () => begin(); $('replayButton').onclick = () => begin();
@@ -1267,24 +1317,26 @@ window.addEventListener('unhandledrejection', event => { stats.errors.push(Strin
 document.addEventListener('keydown', event => {
   const key = event.key.toLowerCase(); touch();
   if (key === 'escape') { event.preventDefault(); if (paused) { togglePause(false); return; } if (worldTableSession) { exitWorldTable(); clearInput(); return; } if (panel === 'dialogue' && dialogueReturnMachine) $('closeDialogue').onclick(); else if (panel) closePanel(); else togglePause(); return; }
+  if (key === 'm') {
+    const tag = document.activeElement?.tagName, typing = tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'INPUT' && document.activeElement.type !== 'range';
+    if (event.ctrlKey || event.metaKey || event.altKey || event.repeat || typing) return;
+    event.preventDefault(); toggleSound(); return;
+  }
   if (panel === 'help') {
     if (key === 'tab' && !event.ctrlKey && !event.metaKey) {
-      const controls = [...$('help').querySelectorAll('button:not(:disabled), a[href]')].filter(control => !control.closest('.hidden'));
+      const controls = [...$('help').querySelectorAll('button:not(:disabled), a[href], summary, input:not(:disabled), select:not(:disabled)')].filter(control => !control.closest('.hidden') && control.getClientRects().length);
       const index = controls.indexOf(document.activeElement), last = controls.length - 1;
       if (index < 0 || event.shiftKey && index === 0 || !event.shiftKey && index === last) {
         event.preventDefault(); controls[event.shiftKey ? last : 0]?.focus();
       }
     } else if (key === 'h' && !event.ctrlKey && !event.metaKey && !event.altKey) { event.preventDefault(); if (!event.repeat) closePanel(); }
-    else if (key === 'm' && !event.ctrlKey && !event.metaKey && !event.altKey) {
-      event.preventDefault(); if (!event.repeat) { initAudio(); soundOn = !soundOn; updateSound(); }
-    }
     return;
   }
   if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
-  if ((key === ' ' || key === 'enter') && ['BUTTON', 'SUMMARY'].includes(document.activeElement?.tagName) && (mode === 'title' || paused || document.activeElement.closest('#worldTableHud'))) return;
+  if (started && !paused && !event.repeat && !event.ctrlKey && !event.metaKey && !event.altKey) unlockSound();
+  if ((key === ' ' || key === 'enter') && ['BUTTON', 'SUMMARY'].includes(document.activeElement?.tagName)) return;
   if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) event.preventDefault();
   if (event.repeat) { if (mode === 'playing' && !paused && !panel) keys.add(key); return; }
-  if (key === 'm') { initAudio(); soundOn = !soundOn; updateSound(); return; }
   if (key === 'h' && !paused) { openHelp(); return; }
   if (mode !== 'playing' || paused) return;
   if (key === 'j') { panel === 'map' ? closePanel() : openPanel('map'); return; }
@@ -1293,12 +1345,13 @@ document.addEventListener('keydown', event => {
   if (key === 'e') interact(); if (key === 'r') radio(); if (key === ' ') pulse(); if (key === 'g' && !epilogue) { if (falling > 0 || world.heightAt(run.pos.x, run.pos.z, run) == null) message('Return to stable ground before putting down an essential part.'); else act({ kind: 'drop' }); }
 });
 document.addEventListener('keyup', event => keys.delete(event.key.toLowerCase()));
-document.addEventListener('pointerdown', touch); document.addEventListener('input', touch);
+document.addEventListener('pointerdown', () => { touch(); if (started && !paused && !document.hidden) unlockSound(); }); document.addEventListener('input', touch);
 window.addEventListener('blur', clearInput);
 document.addEventListener('visibilitychange', () => {
   clearInput(); frameIntervalActive = false;
   if (document.hidden) { hiddenAt = performance.now(); save(); }
   else { if (hiddenAt !== null && started && mode === 'playing') run.clock.pause += (performance.now() - hiddenAt) / 1000; hiddenAt = null; timer.getDelta(); touch(); }
+  updateSoundscape(true);
 });
 $('world').addEventListener('pointerdown', event => { if (panel || paused) return; startWorldCellGesture(event); dragging = true; pointerX = event.clientX; $('world').setPointerCapture(event.pointerId); touch(); });
 $('world').addEventListener('pointermove', event => { moveWorldCellGesture(event); if (event.buttons === 0) { dragging = false; hoverWorldCell(event); } if (!dragging || panel || paused) return; yaw -= (event.clientX - pointerX) * .006; pointerX = event.clientX; touch(); });
@@ -1312,9 +1365,12 @@ $('worldTableFrame').onclick = () => { if (!worldTableSession) return; if (world
 $('worldTableCommit').onclick = () => { if (!worldTableEditable()) return; const before = worldTableMachine().chamber; act({ kind: 'manual', console: 'choir_voice_signal', operation: { op: 'trigger', trigger: 'chamber_voice_commit' } }); const after = worldTableMachine().chamber; if (!before.complete && after.complete) message('Voice routing sealed. Its route and recorded inputs are kept.'); else if (before.index !== after.index) message(`Phase ${before.index + 1} committed. Phase ${after.index + 1} is now current; inspect its dry trace before committing.`); };
 $('worldTracePause').onclick = () => { if (!worldTrace.plan?.segments.length || worldTrace.done) return; worldTrace.paused = !worldTrace.paused; renderWorldTable(); };
 $('worldTraceNext').onclick = () => { if (!worldTrace.plan?.segments.length || worldTrace.done) return; worldTrace.paused = true; if (worldTrace.index < worldTrace.plan.segments.length - 1) { worldTrace.index++; worldTrace.elapsed = WORLD_TRACE_LEG_SECONDS / 2; } else { worldTrace.elapsed = WORLD_TRACE_LEG_SECONDS; worldTrace.done = true; } renderWorldTable(); };
-window.addEventListener('pagehide', save);
+window.addEventListener('pagehide', () => { save(); soundscape.update({ hidden: true, paused: true }); });
 window.threadwake = { version: '3.0.0', snapshot: () => structuredClone({ run: Campaign.snapshot(run, { diagnostics: true }), mode, panel, paused, projection, stats }) };
 try { saved = JSON.parse(localStorage.getItem(saveKey)); if (saved?.version !== 3) saved = null; visible('continueButton', !!saved); } catch {}
+document.querySelectorAll('[data-audio-channel]').forEach(input => input.oninput = () => { soundPreferences[input.dataset.audioChannel] = Number(input.value) / 100; updateSound(true); unlockSound(); });
+document.querySelectorAll('[data-audio-mute]').forEach(button => button.onclick = toggleSound);
+updateSound();
 if (browserEdition) $('authoredCalibration').open = true;
 else {
   document.title = 'Threadwake — Local Model Edition';

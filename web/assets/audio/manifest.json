@@ -1,0 +1,347 @@
+{
+  "schema": 1,
+  "title": "Lanterns on the Glass Meridian",
+  "composer": "Gemini 4 Argon High original composition; Threadwake contributors arrangement and synthesis",
+  "renderRevision": 3,
+  "arrangement": {
+    "revision": 3,
+    "originalScoreSHA256": "aa9f9c18f8b4016e728cd1ab019f9603774442945611c8f20308fc872473da35",
+    "credit": "Original composition by Gemini 4 Argon High; revised arrangement and synthesis by Threadwake contributors.",
+    "upperStemOnsetFreeWindowsSeconds": [
+      [
+        18,
+        30
+      ],
+      [
+        48,
+        60
+      ],
+      [
+        69.5,
+        81.5
+      ],
+      [
+        84,
+        96
+      ],
+      [
+        151,
+        161
+      ]
+    ],
+    "changes": "Remove crowded upper attacks while preserving all four companion phrases and later bloom. Join closing/opening F# minor voicing through sustained lower tones; remove high closing bell and fresh opening bass/pad/arpeggio reattacks. Remaining bell entrances vary by 26\u201334 ms, with small intentional velocity accents.",
+    "originalCompositionEventCount": 231
+  },
+  "dryStereo": "Phase-coherent amplitude panning; stereo width from score positions and decorrelated room, no dry channel microdelay",
+  "source": "score.json",
+  "scoreSHA256": "d48c644ed6a169fd3232714173bfb9bb899d0240b2e6e151d91949db760069e2",
+  "rendererSHA256": "8449e067b9a795f92fea8cc6ed59129e651963e58c8f0f74d9332f047abe29c2",
+  "license": "CC-BY-4.0 to the extent rights are held; original score and synthesized audio, no recordings or samples",
+  "sampleRate": 44100,
+  "channels": 2,
+  "seconds": 192.0,
+  "bpm": 80,
+  "beats": 256,
+  "encoding": {
+    "ogg": "Ogg Opus, libopus 128 kb/s VBR; Opus coded rate 48 kHz",
+    "mp3": "libmp3lame 96 kb/s; gapless delay/padding metadata"
+  },
+  "combinedDecodedFloat32BytesAt44100": 135475200,
+  "combinedDecodedFloat32BytesAt48000": 147456000,
+  "gain": 2.2937621285744916,
+  "limiting": "None; one common linear gain with sample peak and RMS reserve",
+  "fullMix": {
+    "samplesPerChannel": 8467200,
+    "seconds": 192.0,
+    "samplePeakDBFS": -5.46,
+    "rmsDBFS": -23.0,
+    "crestDB": 17.54,
+    "oneSecondRMSPercentileDBFS": {
+      "5": -28.034,
+      "50": -23.888,
+      "95": -19.27
+    },
+    "seamStepPeak": 0.0005108278710395098,
+    "seamStepVsTypicalDifferenceRMS": 0.14740087573677116,
+    "monoFoldDownDB": -0.648,
+    "sideRMSDBFS": -31.581,
+    "stereoCorrelation": 0.725580675370355,
+    "nonfinite": 0,
+    "hardClipSamples": 0
+  },
+  "stems": {
+    "foundation": {
+      "samplesPerChannel": 8467200,
+      "seconds": 192.0,
+      "samplePeakDBFS": -5.995,
+      "rmsDBFS": -23.15,
+      "crestDB": 17.155,
+      "oneSecondRMSPercentileDBFS": {
+        "5": -28.108,
+        "50": -24.018,
+        "95": -19.528
+      },
+      "seamStepPeak": 0.000511842779815197,
+      "seamStepVsTypicalDifferenceRMS": 0.16378234994914542,
+      "monoFoldDownDB": -0.63,
+      "sideRMSDBFS": -31.844,
+      "stereoCorrelation": 0.7331667173544234,
+      "nonfinite": 0,
+      "hardClipSamples": 0
+    },
+    "filigree": {
+      "samplesPerChannel": 8467200,
+      "seconds": 192.0,
+      "samplePeakDBFS": -17.403,
+      "rmsDBFS": -37.52,
+      "crestDB": 20.117,
+      "oneSecondRMSPercentileDBFS": {
+        "5": -118.65,
+        "50": -42.509,
+        "95": -30.665
+      },
+      "seamStepPeak": 3.3063333830796182e-06,
+      "seamStepVsTypicalDifferenceRMS": 0.002222625280510554,
+      "monoFoldDownDB": -1.241,
+      "sideRMSDBFS": -43.566,
+      "stereoCorrelation": 0.505414265965248,
+      "nonfinite": 0,
+      "hardClipSamples": 0
+    }
+  },
+  "files": {
+    "foundation.ogg": {
+      "samplesPerChannel": 8467200,
+      "seconds": 192.0,
+      "samplePeakDBFS": -5.981,
+      "rmsDBFS": -23.15,
+      "crestDB": 17.169,
+      "oneSecondRMSPercentileDBFS": {
+        "5": -28.121,
+        "50": -24.018,
+        "95": -19.52
+      },
+      "seamStepPeak": 0.0036324262619018555,
+      "seamStepVsTypicalDifferenceRMS": 1.1615791548562233,
+      "monoFoldDownDB": -0.629,
+      "sideRMSDBFS": -31.852,
+      "stereoCorrelation": 0.7335683336024442,
+      "nonfinite": 0,
+      "hardClipSamples": 0,
+      "bytes": 3920293,
+      "sha256": "2c7a19b769b324d2be784533b00d9519811228c269bfe224738a53d049918b1f",
+      "containerProbe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "opus",
+            "sample_rate": "48000",
+            "channels": 2,
+            "time_base": "1/48000",
+            "duration_ts": 9216312,
+            "duration": "192.006500"
+          }
+        ],
+        "format": {
+          "duration": "192.006500",
+          "size": "3920293"
+        }
+      }
+    },
+    "foundation.mp3": {
+      "samplesPerChannel": 8467200,
+      "seconds": 192.0,
+      "samplePeakDBFS": -6.405,
+      "rmsDBFS": -23.596,
+      "crestDB": 17.191,
+      "oneSecondRMSPercentileDBFS": {
+        "5": -28.553,
+        "50": -24.463,
+        "95": -19.974
+      },
+      "seamStepPeak": 0.010672969743609428,
+      "seamStepVsTypicalDifferenceRMS": 3.5949286400458074,
+      "monoFoldDownDB": -0.63,
+      "sideRMSDBFS": -32.289,
+      "stereoCorrelation": 0.733146503492899,
+      "nonfinite": 0,
+      "hardClipSamples": 0,
+      "bytes": 2304670,
+      "sha256": "752ed5afe97084363bdf6942a22f78f1b59bd545ad00b5c96dd3eadb4cab43ae",
+      "containerProbe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "mp3",
+            "sample_rate": "44100",
+            "channels": 2,
+            "time_base": "1/14112000",
+            "duration_ts": 2709504000,
+            "duration": "192.000000"
+          }
+        ],
+        "format": {
+          "duration": "192.000000",
+          "size": "2304670"
+        }
+      }
+    },
+    "filigree.ogg": {
+      "samplesPerChannel": 8467200,
+      "seconds": 192.0,
+      "samplePeakDBFS": -17.404,
+      "rmsDBFS": -37.518,
+      "crestDB": 20.114,
+      "oneSecondRMSPercentileDBFS": {
+        "5": -118.643,
+        "50": -42.508,
+        "95": -30.665
+      },
+      "seamStepPeak": 4.850371624343097e-06,
+      "seamStepVsTypicalDifferenceRMS": 0.003259694241740507,
+      "monoFoldDownDB": -1.241,
+      "sideRMSDBFS": -43.564,
+      "stereoCorrelation": 0.5054443304257605,
+      "nonfinite": 0,
+      "hardClipSamples": 0,
+      "bytes": 4119661,
+      "sha256": "c18c5b50dc75c99c21c5872f3ee081f4d04e120483a8898d1026b3db5f65f5d5",
+      "containerProbe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "opus",
+            "sample_rate": "48000",
+            "channels": 2,
+            "time_base": "1/48000",
+            "duration_ts": 9216312,
+            "duration": "192.006500"
+          }
+        ],
+        "format": {
+          "duration": "192.006500",
+          "size": "4119661"
+        }
+      }
+    },
+    "filigree.mp3": {
+      "samplesPerChannel": 8467200,
+      "seconds": 192.0,
+      "samplePeakDBFS": -17.856,
+      "rmsDBFS": -37.966,
+      "crestDB": 20.11,
+      "oneSecondRMSPercentileDBFS": {
+        "5": -119.078,
+        "50": -42.954,
+        "95": -31.112
+      },
+      "seamStepPeak": 7.697304681641981e-06,
+      "seamStepVsTypicalDifferenceRMS": 0.005446730144783294,
+      "monoFoldDownDB": -1.241,
+      "sideRMSDBFS": -44.012,
+      "stereoCorrelation": 0.5054182222858069,
+      "nonfinite": 0,
+      "hardClipSamples": 0,
+      "bytes": 2304670,
+      "sha256": "876b72f195076f38428ff35cb57593a40eb0e82473dc1cd1726dd23dd269f0ea",
+      "containerProbe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "mp3",
+            "sample_rate": "44100",
+            "channels": 2,
+            "time_base": "1/14112000",
+            "duration_ts": 2709504000,
+            "duration": "192.000000"
+          }
+        ],
+        "format": {
+          "duration": "192.000000",
+          "size": "2304670"
+        }
+      }
+    }
+  },
+  "criticalMonoProbes": {
+    "bass": {
+      "midi": 61,
+      "frequencyHz": 277.1826309768721,
+      "dryMonoFoldDownDB": -0.003
+    },
+    "bell": {
+      "midi": 61,
+      "frequencyHz": 277.1826309768721,
+      "dryMonoFoldDownDB": -0.003
+    },
+    "felt": {
+      "midi": 61,
+      "frequencyHz": 277.1826309768721,
+      "dryMonoFoldDownDB": -0.003
+    },
+    "glass": {
+      "midi": 61,
+      "frequencyHz": 277.1826309768721,
+      "dryMonoFoldDownDB": -0.002
+    },
+    "pad": {
+      "midi": 61,
+      "frequencyHz": 277.1826309768721,
+      "dryMonoFoldDownDB": -0.003
+    },
+    "pluck": {
+      "midi": 61,
+      "frequencyHz": 277.1826309768721,
+      "dryMonoFoldDownDB": -0.003
+    }
+  },
+  "decodedOGGMix": {
+    "samplesPerChannel": 8467200,
+    "seconds": 192.0,
+    "samplePeakDBFS": -5.47,
+    "rmsDBFS": -23.0,
+    "crestDB": 17.53,
+    "oneSecondRMSPercentileDBFS": {
+      "5": -28.046,
+      "50": -23.889,
+      "95": -19.261
+    },
+    "seamStepPeak": 0.0036296024918556213,
+    "seamStepVsTypicalDifferenceRMS": 1.046734381436352,
+    "monoFoldDownDB": -0.647,
+    "sideRMSDBFS": -31.588,
+    "stereoCorrelation": 0.7259826939015938,
+    "nonfinite": 0,
+    "hardClipSamples": 0,
+    "integratedLUFS": -21.46,
+    "truePeakDBTP": -5.47,
+    "loudnessRangeLU": 7.7
+  },
+  "decodedMP3Mix": {
+    "samplesPerChannel": 8467200,
+    "seconds": 192.0,
+    "samplePeakDBFS": -5.884,
+    "rmsDBFS": -23.446,
+    "crestDB": 17.562,
+    "oneSecondRMSPercentileDBFS": {
+      "5": -28.48,
+      "50": -24.334,
+      "95": -19.718
+    },
+    "seamStepPeak": 0.01068066619336605,
+    "seamStepVsTypicalDifferenceRMS": 3.2441737329741183,
+    "monoFoldDownDB": -0.648,
+    "sideRMSDBFS": -32.027,
+    "stereoCorrelation": 0.7255661560181415,
+    "nonfinite": 0,
+    "hardClipSamples": 0,
+    "integratedLUFS": -21.91,
+    "truePeakDBTP": -5.88,
+    "loudnessRangeLU": 7.6
+  },
+  "compressedBytes": 12649294
+}

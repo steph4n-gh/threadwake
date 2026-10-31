@@ -216,3 +216,15 @@ body[data-edition="authored-demo"] .native-only,body[data-edition="local-model"]
 .panel .edition-note{font-size:10px;max-width:100%}
 #titleEditionNote{max-width:420px;margin-top:-10px}
 @media(max-height:790px){#titleEditionNote{font-size:10px;line-height:1.6;margin-bottom:14px}}
+
+.audio-controls{margin:18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 0;color:#c6d6bc}
+.audio-controls summary{cursor:pointer;font-size:12px;line-height:1.8;color:#d5dfc2}
+.audio-mix{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;padding:4px 0 8px}
+.audio-controls .audio-channel label{display:flex;justify-content:space-between;align-items:center;margin:11px 0 6px;font-size:10px;letter-spacing:.3px}
+.audio-controls output{color:#caddb7;font-variant-numeric:tabular-nums;font-size:10px}
+.audio-controls input[type=range]{width:100%;margin:0;accent-color:#cbdcab;cursor:pointer}
+.audio-controls button.audio-mute{padding:8px 12px;font-size:10px}
+.panel .audio-controls .audio-status{font-size:10px;line-height:1.65;margin:10px 0 0}
+.small-panel .audio-mix{grid-template-columns:1fr;gap:0}
+.audio-controls :focus-visible{outline:2px solid #d6dda8;outline-offset:4px}
+@media(max-width:550px){.audio-mix{grid-template-columns:1fr;gap:0}}
