@@ -1,0 +1,18 @@
+Threadwake: The Last Crossing
+Copyright 2026 Threadwake contributors
+
+Software in this repository is licensed under Apache-2.0, except third-party
+software identified in THIRD_PARTY_NOTICES.md. Original narrative text,
+character artwork, guide illustrations, and manual/documentation content are
+licensed under CC-BY-4.0 to the extent the contributors hold applicable rights.
+The textual story content embedded in game data uses that content license;
+the surrounding program logic uses Apache-2.0. See licenses/CC-BY-4.0.txt.
+
+AI tools assisted development, artwork, testing and review. Attribution records
+actual contributions; no exclusive copyright in purely AI-generated material
+or endorsement by tool/model providers is asserted.
+
+Model weights are not included and are not relicensed by this project.
+Optional downloads remain subject to the exact model repositories' terms.
+No private neuron-explorer source, development transcripts, or personal logs
+are included in this distribution. See ASSETS.md and THIRD_PARTY_NOTICES.md.

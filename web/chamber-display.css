@@ -1,0 +1,59 @@
+.chamber-instrument,.chamber-instrument-summary{--band-b:#f0bd66;--band-s:#57cde3;--band-u:#f08073;margin:5px 0 20px;color:#c4d7bb}.chamber-instrument-frame{height:245px;position:relative;overflow:hidden;border:1px solid #a9c59a38;border-radius:5px;background:radial-gradient(ellipse at 50% 55%,#244340a0,#071a2500 70%),linear-gradient(145deg,#0b2732,#071b26)}.chamber-instrument-frame canvas{width:100%;height:100%;display:block}.chamber-instrument-tag{position:absolute;left:12px;right:12px;top:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:none;font-size:7px;letter-spacing:1.1px;z-index:2;color:#abc2b2}.chamber-instrument-tag b{font-weight:500;color:#d7bd88;background:#071c27ce;padding:4px 7px;border-radius:3px}.chamber-instrument[data-state=ready] .chamber-instrument-tag b,.chamber-instrument[data-state=complete] .chamber-instrument-tag b{color:#cce8b9}.chamber-port-labels{position:absolute;inset:0;pointer-events:none}.chamber-port-labels>span{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;font-size:7px;font-weight:550;letter-spacing:.3px;padding:3px 5px;border-radius:3px;background:#061c28ed;border:1px solid #afc89c36;color:#dce2c6}.chamber-port-labels [data-band=BRIDGE]{color:var(--band-b)}.chamber-port-labels [data-band=SHELTER]{color:var(--band-s)}.chamber-port-labels [data-band=SURGE]{color:var(--band-u)}.chamber-rotor-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:8px}.chamber-rotor-grid>button{min-width:0;display:flex;align-items:center;gap:7px;padding:7px 9px;text-align:left;font-size:9px;color:#bed0b7;background:#a8c3980c;border:1px solid #a9c49d3d}.chamber-rotor-grid>button[data-kind=prism]{border-color:#d4ba7e59;background:#b9aa6e0c}.chamber-rotor-grid>button>b{font-family:Georgia,serif;font-size:13px;color:#e0dfbd;font-weight:400}.chamber-rotor-grid>button>span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1;font-size:8px}.chamber-rotor-grid>button>i{font-style:normal;color:#d6bf8b;font-size:13px}.chamber-flux-legend{display:flex;gap:10px;justify-content:space-between;border-top:1px solid #9db99530;border-bottom:1px solid #9db99530;margin-top:12px;padding:9px 0}.chamber-flux-legend>span{display:flex;gap:7px;align-items:center;font-size:9px}.chamber-flux-legend b{font-size:7px;letter-spacing:.6px;font-weight:500}.chamber-flux-legend [data-band=BRIDGE]{color:var(--band-b)}.chamber-flux-legend [data-band=SHELTER]{color:var(--band-s)}.chamber-flux-legend [data-band=SURGE]{color:var(--band-u)}.chamber-readings{margin-top:8px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.chamber-reading{display:flex;flex-direction:column;gap:2px;min-width:0;padding:7px 9px;background:#a8c59b0a;border:1px solid #acc69a26;border-radius:3px;font-size:9px;line-height:1.5;color:#b0c6ab}.chamber-reading>b{font:19px/1.25 Georgia,serif;font-weight:400;white-space:nowrap;color:#d6ddbd}.chamber-reading.is-reserve{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center;padding:5px 9px}.chamber-reading.is-reserve>b{font:10px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.chamber-reading.is-good{color:#c9dfb4}.chamber-reading.is-danger,.chamber-reading.is-danger>b{color:#edb39b}.chamber-instrument-note{font-size:8px!important;line-height:1.8!important;color:#8fae9a!important;margin:8px 0 0!important}.chamber-diagram-unavailable{height:auto;min-height:90px;padding:35px 15px 15px}.chamber-diagram-unavailable>p{font-size:10px;color:#b8cdb2;line-height:1.8}@media(max-width:500px){.chamber-instrument-frame{height:245px}.chamber-rotor-grid>button{padding:6px;gap:4px}.chamber-rotor-grid>button>span{font-size:7px}.chamber-flux-legend{gap:5px}.chamber-flux-legend>span{gap:4px;font-size:8px}.chamber-flux-legend b{font-size:6px}.chamber-port-labels>span{font-size:6px;padding:2px 3px}}
+
+.chamber-goals{border-top:1px solid #a1bb9330;padding-top:7px;margin-top:7px}.chamber-goal{display:flex;gap:7px;font-size:10px;line-height:1.5;color:#b4c8aa;padding:4px 0}.chamber-goal>span:first-child{flex:none;width:9px;color:#96b492}.chamber-goal.is-good,.chamber-goal.is-good>span:first-child{color:#c8deb2}
+
+.chamber-instrument-summary{margin:0 0 12px}.chamber-instrument-summary .chamber-flux-legend{margin-top:0;padding-top:7px;padding-bottom:7px}.chamber-instrument-summary .chamber-goals{margin-top:8px;padding-top:5px}.chamber-instrument-summary .chamber-reading>span{overflow-wrap:anywhere}@media(max-height:760px){.chamber-instrument-frame{height:240px}.chamber-instrument-note{line-height:1.55!important;margin-top:6px!important}.chamber-rotor-grid>button{padding-top:6px;padding-bottom:6px}}
+
+.chamber-trace-caption{margin:9px 0 5px!important;font-size:7px!important;line-height:1.5!important;letter-spacing:1px;color:#d1bd8b!important}.chamber-trace-caption+.chamber-readings{margin-top:0}
+
+.chamber-rotor-grid.chamber-rotor-overlay{position:absolute;inset:0;display:block;margin:0;z-index:3;pointer-events:none}
+.chamber-rotor-grid.chamber-rotor-overlay>button{position:absolute;width:58px;height:46px;display:block;transform:translate(-50%,-50%);padding:0;border-radius:6px;background:#04192335;border:1px solid #b9cca843;pointer-events:auto;text-align:left;overflow:visible}
+.chamber-rotor-grid.chamber-rotor-overlay>button:hover:not(:disabled){background:#153d499e;border-color:#e2ca8b}
+.chamber-rotor-grid.chamber-rotor-overlay>button:disabled{opacity:1}
+.chamber-rotor-grid.chamber-rotor-overlay>button>b{position:absolute;top:2px;left:4px;font:10px/1.1 Georgia,serif;color:#edf0d8;text-shadow:0 1px 3px #00101c}
+.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-turn-name{position:absolute;bottom:2px;left:4px;width:auto;max-width:none;overflow:visible;white-space:nowrap;text-overflow:clip;font-size:7px;font-weight:600;line-height:1.2;letter-spacing:.1px;color:#e1e6ce;text-shadow:0 1px 3px #00101c}
+.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-turn-glyph{position:absolute;left:10px;top:10px;width:24px;height:24px;overflow:visible}
+.chamber-turn-glyph svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 1px 2px #00111e)}
+.chamber-turn-glyph path{fill:none;stroke:#edf0d8;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}.chamber-turn-glyph circle{fill:#edf0d8;stroke:#09232e;stroke-width:.7}
+.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-checkpoint-badges{position:absolute;top:11px;right:2px;display:flex;flex-direction:column;gap:1px;width:17px;overflow:visible;white-space:normal}
+.chamber-checkpoint-badges>b{display:block;min-width:16px;height:10px;text-align:center;font:650 8px/10px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#041a25f2;border-radius:2px;border:1px solid currentColor}
+.chamber-checkpoint-badges [data-band=BRIDGE]{color:var(--band-b)}.chamber-checkpoint-badges [data-band=SHELTER]{color:var(--band-s)}.chamber-checkpoint-badges [data-band=SURGE]{color:var(--band-u)}
+.chamber-port-labels{z-index:4}.chamber-instrument-tag{z-index:5}
+@media(max-width:500px){.chamber-rotor-grid.chamber-rotor-overlay>button{width:54px;height:44px}.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-turn-name{font-size:6.5px}.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-turn-glyph{left:8px;top:10px;width:22px;height:22px}}
+
+.chamber-rotor-fallback>button{display:grid;grid-template-columns:24px minmax(0,1fr);gap:4px}.chamber-rotor-fallback .chamber-turn-glyph{display:none}.chamber-rotor-fallback>button>.chamber-turn-name{overflow:visible;white-space:normal;text-overflow:clip}.chamber-rotor-fallback>button>.chamber-checkpoint-badges{display:flex;gap:3px;grid-column:1/-1;overflow:visible}.chamber-rotor-fallback .chamber-checkpoint-badges>b{width:20px;height:12px;line-height:11px}
+
+.chamber-flux-legend{display:grid;grid-template-columns:.75fr repeat(3,minmax(0,1fr));gap:5px;align-items:stretch}
+.chamber-flux-legend>button{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;min-width:0;padding:6px 4px;background:#9db99508;border:1px solid #a8c49b32;color:#c5d5ba;font-size:9px;line-height:1.3;border-radius:3px}
+.chamber-flux-legend>button[aria-pressed=true]{background:#afc9951c;border-color:currentColor;box-shadow:inset 0 -1px 0 currentColor}
+.chamber-flux-legend>button:first-child{font-size:9px;white-space:nowrap}
+.chamber-flux-legend>button[data-band=BRIDGE]{color:var(--band-b)}.chamber-flux-legend>button[data-band=SHELTER]{color:var(--band-s)}.chamber-flux-legend>button[data-band=SURGE]{color:var(--band-u)}
+.chamber-rotor-grid.chamber-rotor-overlay>button{background:#04192308;border-color:#b9cca82a}
+.chamber-rotor-grid.chamber-rotor-overlay>button:hover:not(:disabled){background:#153d4960}
+.chamber-turn-glyph path{stroke:#d6dbc6;stroke-width:1.9}.chamber-turn-glyph circle{fill:#d6dbc6}
+.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-turn-name{color:#d1d8c0}
+
+.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-cell-kind{position:absolute;top:3px;right:3px;width:auto;overflow:visible;font:650 7px/7px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.2px;color:#e2c48b}
+.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-cell-kind[hidden],.chamber-effective-turn[hidden]{display:none}
+.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-effective-turn{position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);width:max-content;max-width:none;padding:1px 3px;border-radius:2px;background:#031a26f2;font:650 7px/8px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;white-space:nowrap;overflow:visible;text-overflow:clip;letter-spacing:.2px}
+.chamber-effective-turn[data-band=BRIDGE]{color:var(--band-b)}.chamber-effective-turn[data-band=SHELTER]{color:var(--band-s)}.chamber-effective-turn[data-band=SURGE]{color:var(--band-u)}
+.chamber-turn-glyph[data-band=BRIDGE] path,.chamber-turn-glyph[data-band=BRIDGE] circle{stroke:var(--band-b)}.chamber-turn-glyph[data-band=SHELTER] path,.chamber-turn-glyph[data-band=SHELTER] circle{stroke:var(--band-s)}.chamber-turn-glyph[data-band=SURGE] path,.chamber-turn-glyph[data-band=SURGE] circle{stroke:var(--band-u)}
+.chamber-rotor-fallback>button>.chamber-cell-kind{font-size:7px;color:#e2c48b}.chamber-rotor-fallback>button>.chamber-effective-turn{position:static;grid-column:1/-1;overflow:visible;white-space:normal;font-size:8px}
+
+/* Keep text legible above the optical rays; the central turn glyph remains transparent. */
+.chamber-rotor-grid.chamber-rotor-overlay>button>b,
+.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-turn-name,
+.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-cell-kind{background:#061b26;box-shadow:0 0 0 1px #061b26;border-radius:1px}
+.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-effective-turn{background:#061b26}
+.chamber-rotor-grid.chamber-rotor-overlay .chamber-checkpoint-badges>b{background:#061b26}
+.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-turn-glyph{left:8px}
+.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-checkpoint-badges{right:1px;gap:2px}
+@media(max-width:500px){.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-checkpoint-badges{gap:1px}}
+.chamber-sealed-inputs .mix-components{padding-left:16px}
+.chamber-sealed-inputs .mix-components small{display:block;margin-top:3px;font-size:9px;line-height:1.5;overflow-wrap:anywhere;color:#9eb9a9}
+
+/* Separate instrument metadata from its projected north ports. */
+.chamber-instrument-tag{position:static;inset:auto;padding:0 3px;margin:0 0 6px}
+.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-cell-kind{top:2px}
+.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-checkpoint-badges{top:12px;gap:1px}
+@media(max-width:500px){.chamber-rotor-grid.chamber-rotor-overlay>button>.chamber-checkpoint-badges{top:11px}}

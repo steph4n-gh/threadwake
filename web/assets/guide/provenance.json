@@ -1,0 +1,10 @@
+{
+  "first-light.jpg": {
+    "source": "Actual Threadwake opening gameplay screenshot",
+    "sha256": "1c4fd0b125b2db7dcb5786f393d34257a090870aaba24a809a038f450acae444",
+    "description": "Unmodified development gameplay capture; opening chapter, no inference in the capture session.",
+    "edits": "none"
+  },
+  "diagrams": "Original explanatory schematic vectors and CSS diagrams, not measured model outputs.",
+  "portraits": "Original AI-assisted companion art; unchanged source-resolution files in assets/portraits. See ASSETS.md for credits and license scope."
+}
